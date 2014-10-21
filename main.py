@@ -3,7 +3,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    return 'This is a spotpost!'
+    return 'This is spotpost!'
 
 if __name__ == '__main__':
   # Runs on port 5000 by default
