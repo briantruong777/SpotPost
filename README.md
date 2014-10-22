@@ -7,7 +7,7 @@ How To Launch Development Site
 --------
 
 ### First time setup
-1. Install python2.7 and virtualenv
+1. Install python2.7 (might work with python3) and virtualenv
 2. Make a directory for the project and go into it
 3. Run `git clone` with the git url
 4. Make a directory called `venv` inside here
