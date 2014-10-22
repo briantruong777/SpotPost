@@ -1,0 +1,17 @@
+<!doctype html>
+<title>Spotpost Demo</title>
+<div class="page">
+  <div class="navigation">
+    <a href="{{ url_for('get_spotpost_input') }}">Get spotpost</a> |
+    <a href="{{ url_for('get_all_spotposts') }}">Get all spotposts</a> |
+    <a href="{{ url_for('post_spotpost') }}">Post spotpost</a> |
+    <a href="{{ url_for('delete_spotpost_input') }}">Delete spotpost</a> |
+    <a href="{{ url_for('update_spotpost_input') }}">Update spotpost</a>
+    <hr>
+  </div>
+  
+  <div class="body">
+  {% block body %}{% endblock %}
+  </div>
+
+</div>
