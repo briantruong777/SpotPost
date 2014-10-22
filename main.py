@@ -1,12 +1,22 @@
 from flask import Flask, session, request, abort, render_template, redirect, url_for
 import os
-import simplejson
 import sqlite3
+
+# If Python2.6, simplejson is better than json, but in Python2.7, simplejson became json
+try: import simplejson as json
+except ImportError: import json
 
 connect = sqlite3.connect('demo.db')
 cursor = connect.cursor()
 
 app = Flask(__name__)
+
+# For logging to a file called "spotpost_log"
+import logging
+from logging import FileHandler
+file_handler = FileHandler("spotpost_log")
+file_handler.setLevel(logging.WARNING)
+app.logger.addHandler(file_handler)
 
 '''
 '	
@@ -67,6 +77,7 @@ def post_spotpost():
 		cursor.execute("INSERT INTO test(title, name, content) VALUES (?,?,?)", (title, user, content))
 		cursor.execute("SELECT MAX(ID) FROM test")
 		curr_id = cursor.fetchone()[0]
+		connect.commit()
 
 		return redirect(url_for('get_spotpost', id = curr_id))
 
@@ -82,6 +93,7 @@ def post_spotpost():
 @app.route('/spotpost/delete/<id>')
 def delete_spotpost(id):
 	cursor.execute("DELETE FROM test WHERE id = ?", (id,))
+	connect.commit()
 	return render_template('delete_spotpost.html')
 
 '''
@@ -115,6 +127,7 @@ def update_spotpost(id):
 		user = request.form['user']
 		content = request.form['content']
 		cursor.execute("UPDATE test SET title = ?, name = ?, content = ? WHERE ID = ?", (title, user, content, id))
+		connect.commit()
 		return redirect(url_for('get_spotpost', id = id))
 
 '''
@@ -142,8 +155,7 @@ def index():
 initDB()
 
 if __name__ == '__main__':
-  # Runs on port 5000 by default
-  # url: "localhost:5000"
-  app.run(host="0.0.0.0")
-
-connect.close()
+	# Runs on port 5000 by default
+	# url: "localhost:5000"
+	app.run(host="0.0.0.0")
+	connect.close()
