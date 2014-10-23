@@ -1,11 +1,28 @@
 {% extends "layout.html" %}
 {% block body %}
-<h1>Get Spotpost</h1>
-<form action="" method="post">
-	<dl>
-		<dt>Enter ID of Spotpost you'd like:
-		<dd><input type="text" name="id" size="30">
-	</dl>
-	<div class="actions"><input type="submit" value="Submit"></div>
-</form>
+<style>
+th {
+	text-align: left;
+}
+</style>
+
+<table border = "1" style="width:100%">
+	<tr>
+		<th>ID</th>
+		<th>Title</th>
+		<th>User</th>	
+		<th>Content</th>	
+		<th>Date/Time</th>
+	</tr>
+
+	{% for item in data_query %}
+		<tr>
+			<td>{{item[0]}}</td>
+			<td>{{item[1]}}</td>
+			<td>{{item[2]}}</td>
+			<td>{{item[3]}}</td>
+			<td>{{item[4]}}</td>
+		</tr>
+	{% endfor %}
+</table>
 {% endblock %}

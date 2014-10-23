@@ -28,15 +28,27 @@ def initDB():
 
 '''
 '	
-'	Processes input for getting a spotpost.
+'	Processes input for getting a spotpost by ID.
 '
 '''
-@app.route('/spotpost/get', methods = ['GET', 'POST'])
-def get_spotpost_input():
+@app.route('/spotpost/getid', methods = ['GET', 'POST'])
+def get_spotpost_input_id():
 	if request.method == 'GET':
-		return render_template('get_spotpost.html')
+		return render_template('get_spotpost_byid.html')
 	curr_id = request.form['id']
 	return redirect(url_for('get_spotpost', id = curr_id))
+
+'''
+'	
+'	Prompts the user to input a username to search spotposts for.
+'
+'''
+@app.route('/spotpost/getuser', methods = ['GET', 'POST'])
+def get_spotpost_input_user():
+	if request.method == 'GET':
+		return render_template('get_spotpost_byuser.html')
+	user = request.form['user']
+	return redirect(url_for('get_spotpost_user', user = user))
 
 '''
 '
@@ -47,8 +59,8 @@ def get_spotpost_input():
 @app.route('/spotpost/get/<id>')
 def get_spotpost(id):
 	cursor.execute('SELECT * FROM test WHERE id = ?', (id,))
-	data = cursor.fetchone()
-	return render_template('get_spotpost_byid.html', item = data)
+	data = cursor.fetchall()
+	return render_template('get_spotpost.html', data_query = data)
 
 '''
 '
@@ -60,7 +72,20 @@ def get_all_spotposts():
 	cursor.execute('SELECT * FROM test')
 	data = cursor.fetchall()
 	
-	return render_template('get_all_spotposts.html', data_query = data)
+	return render_template('get_spotpost.html', data_query = data)
+
+'''
+'
+'	Gets the spotposts associated with the User.	
+'	@param user = User of spotpost to get.
+'
+'''
+@app.route('/spotpost/get/user/<user>')
+def get_spotpost_user(user):
+	cursor.execute('SELECT * FROM test WHERE name = ?', (user,))
+	data = cursor.fetchall()
+	
+	return render_template('get_spotpost.html', data_query = data)
 
 '''
 '
