@@ -120,7 +120,6 @@ def post_spotpost():
 def get_spotpost():
 	query = "SELECT * FROM SpotPosts"
 	where_query = False
-	'''
 	min_rating = request.form['min_rating']
 	max_rating = request.form['max_rating']
 	username = request.form['username']
@@ -147,7 +146,7 @@ def get_spotpost():
 			where_query = True
 		else:
 			query = query + "AND rating <= " + max_rating
-	'''
+
 	cursor.execute(query)	
 	rawdata = cursor.fetchall()
 	data = []
