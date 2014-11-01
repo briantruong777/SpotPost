@@ -10,11 +10,11 @@ button.addEventListener("click", function(){
 	});
 	*/
 
-	$.getJSON('http://localhost:5000/get', {num: "", morenum: "5", user: ""}, function(data){
-		var baseHTML = "<tr><th>Num</th><th>Text</th><th>Morenum</th><th>User</th></tr>"
+	$.getJSON('http://localhost:5000/_get', {username: "Admin", min_rating: "11", max_rating: "40"}, function(data){
+		var baseHTML = "<tr><th>ID</th><th>Content</th><th>Rating</th><th>Longitude</th><th>Latitude</th><th>Username</th><th>Time</th></tr>"
 		for(var i = 0; i < data.length; i++){
-			baseHTML += "<tr><td>" + data[i].num + "</td><td>" + data[i].words + "</td><td>" + data[i].morenum 
-						+ "</td><td>" + data[i].user + "</td></tr>";
+			baseHTML += "<tr><td>" + data[i].id + "</td><td>" + data[i].content + "</td><td>" + data[i].rating 
+						+ "</td><td>" + data[i].longitude + "</td><td>" + data[i].latitude + "</td><td>" + data[i].username + "</td><td>" + data[i].time + "</td></tr>";
 			$("#testing").html(baseHTML);
 		}
 	});

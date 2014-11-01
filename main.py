@@ -34,7 +34,7 @@ app.logger.addHandler(file_handler)
 def initDB():
 	#SpotPosts(id, content, photo_id, reputation, longitude, latitude, visibility, user_id, time)
 	cursor.execute("CREATE TABLE IF NOT EXISTS SpotPosts(ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, content varchar(255), " + 
-		"photo_id INTEGER, rating INTEGER DEFAULT 0, longitude REAL NOT NULL, latitude REAL NOT NULL, visibility REAL," + 
+		"rating INTEGER DEFAULT 0, longitude REAL NOT NULL, latitude REAL NOT NULL," + 
 		" username TEXT, time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL)")
 
 #	add_test_data()
@@ -58,60 +58,50 @@ def initDB():
 @app.route('/add_data')
 def add_test_data():
 	content = "This is test data, can't you see!"
-	photo_id = 12
 	username = "TEST"
 	longitude = 18.0
 	latitude = 51.0
-	visibility = 13.37
 	rating = 25523
 	
-	cursor.execute("INSERT INTO SpotPosts(content, photo_id, rating, longitude, latitude, visibility, username) VALUES (?,?,?,?,?,?,?)", (content, photo_id, rating, longitude, latitude, visibility, username))
+	cursor.execute("INSERT INTO SpotPosts(content, rating, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, rating, longitude, latitude, username))
 	connect.commit()
 
 	content = "SSSSSSSSSSSSSSSSSSS"
-	photo_id = 1
 	username = "TEST"
 	longitude = 42
 	latitude = 52
-	visibility = 13
 	rating = 244
 	
-	cursor.execute("INSERT INTO SpotPosts(content, photo_id, rating, longitude, latitude, visibility, username) VALUES (?,?,?,?,?,?,?)", (content, photo_id, rating, longitude, latitude, visibility, username))
+	cursor.execute("INSERT INTO SpotPosts(content, rating, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, rating, longitude, latitude, username))
 	connect.commit()
 
 	content = "Garbage Data is Best Data."
-	photo_id = 5
-	username = "TEST"
+	username = "Admin"
 	longitude = 34
 	latitude = 11
-	visibility = 52
-	rating = 1
+	rating = 23
 	
-	cursor.execute("INSERT INTO SpotPosts(content, photo_id, rating, longitude, latitude, visibility, username) VALUES (?,?,?,?,?,?,?)", (content, photo_id, rating, longitude, latitude, visibility, username))
+	cursor.execute("INSERT INTO SpotPosts(content, rating, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, rating, longitude, latitude, username))
 	connect.commit()
 
 	content = "Unpopular Opinion"
-	photo_id = 6
-	username = "TEST"
+	username = "Admin"
 	longitude = 3
 	latitude = 42
-	visibility = 5
 	rating = 0
 	
-	cursor.execute("INSERT INTO SpotPosts(content, photo_id, rating, longitude, latitude, visibility, username) VALUES (?,?,?,?,?,?,?)", (content, photo_id, rating, longitude, latitude, visibility, username))
+	cursor.execute("INSERT INTO SpotPosts(content, rating, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, rating, longitude, latitude, username))
 	connect.commit()
 
 @app.route('/post', methods = ['POST'])
 def post_spotpost():
 	content = unidecode(request.form['content'])
-	photo_id = int(request.form['photo_id'])
 	user_id = int(request.form['user_id'])
 	longitude = unidecode(request.form['latitude'])
 	latitude = unidecode(request.form['longitude'])
-	visibility = float(request.form['visibility'])
 	rating = int(request.form['rating'])
 	
-	cursor.execute("INSERT INTO SpotPosts(content, photo_id, rating, longitude, latitude, visibility, username) VALUES (?,?,?,?,?,?,?)", (content, photo_id, rating, longitude, latitude, visibility, username))
+	cursor.execute("INSERT INTO SpotPosts(content, rating, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, rating, longitude, latitude, username))
 	connect.commit()
 
 	return "Success"
@@ -119,49 +109,55 @@ def post_spotpost():
 @app.route('/_get')
 def get_spotpost():
 	query = "SELECT * FROM SpotPosts"
+	query_data = ()
 	where_query = False
-	min_rating = request.form['min_rating']
-	max_rating = request.form['max_rating']
-	username = request.form['username']
-	post_id = request.form['id']
+	min_rating = request.args.get('min_rating')
+	max_rating = request.args.get('max_rating')
+	username = request.args.get('username')
+	post_id = request.args.get('id')
 
-	if post_id != '':
-		query = query + "WHERE ID = " + post_id
+	if post_id:
+		query = query + "WHERE ID = ?"
+		query_data = query_data + (post_id,);
 		where_query = True
-	if username != '':
+	if username:
 		if not where_query:
-			query = query + "WHERE username = " + username
+			query = query + " WHERE username = ?"
+			query_data = query_data + (username,);
 			where_query = True
 		else:
-			query = query + "AND username = " + username
-	if min_rating != '':
+			query = query + " AND username = ?"
+			query_data = query_data + (username,);
+	if min_rating:
 		if not where_query:
-			query = query + "WHERE rating >= " + min_rating
+			query = query + " WHERE rating >= ?"
+			query_data = query_data + (min_rating,);
 			where_query = True
 		else:
-			query = query + "AND rating >= " + min_rating
-	if max_rating != '':
+			query = query + " AND rating >= ?"
+			query_data = query_data + (min_rating,);
+	if max_rating:
 		if not where_query:
-			query = query + "WHERE rating <= " + max_rating
+			query = query + " WHERE rating <= ?"
+			query_data = query_data + (max_rating,);
 			where_query = True
 		else:
-			query = query + "AND rating <= " + max_rating
+			query_data = query_data + (max_rating,);
+			query = query + " AND rating <= ?"
 
-	cursor.execute(query)	
+	cursor.execute(query, query_data)	
 	rawdata = cursor.fetchall()
 	data = []
 	for row in rawdata:
-	#SpotPosts(id, content, photo_id, reputation, longitude, latitude, visibility, user_id, time)
+	#SpotPosts(id, content, reputation, longitude, latitude, user_id, time)
 		data_dict = {}
 		data_dict['id'] = row[0]
 		data_dict['content'] = unidecode(row[1])
-		data_dict['photo_id'] = row[2]
-		data_dict['rating'] = row[3]
-		data_dict['longitude'] = row[4]
-		data_dict['latitude'] = row[5]
-		data_dict['visibility'] = row[6]
-		data_dict['username'] = unidecode(row[7])
-		data_dict['time'] = unidecode(row[8])
+		data_dict['rating'] = row[2]
+		data_dict['longitude'] = row[3]
+		data_dict['latitude'] = row[4]
+		data_dict['username'] = unidecode(row[5])
+		data_dict['time'] = unidecode(row[6])
 		data.append(data_dict)
 
 	return json.dumps(data)
