@@ -9,7 +9,7 @@ from unidecode import unidecode
 try: import simplejson as json
 except ImportError: import json
 
-connect = sqlite3.connect('demo.db')
+connect = sqlite3.connect('data.db')
 cursor = connect.cursor()
 
 app = Flask(__name__)
@@ -20,6 +20,54 @@ from logging import FileHandler
 file_handler = FileHandler("spotpost_log")
 file_handler.setLevel(logging.WARNING)
 app.logger.addHandler(file_handler)
+
+def calc_bounding_coords(lon, lat, radius):
+	km_radius = radius / 1000
+
+	km_per_long_deg = 111.320 * math.cos(lat / 180.0 * math.pi)
+
+	deltaLat = radius / 111.1
+	deltaLong = radius / km_per_long_deg
+
+	min_lat = lat - deltaLat
+	max_lat = lat + deltaLat
+	min_long = lon - deltaLong
+	max_long = lon + deltaLong
+
+
+	return max_lng, max_lat, min_lng, min_lat
+
+def build_comments_JSON(curr_id):
+	comments = []
+	cursor.execute("SELECT * FROM SpotPostComments WHERE message_id = ?", (curr_id,))
+	data = cursor.fetchall
+
+	for row in data:
+		comment_dict = {}
+		comment_dict['id'] = row[0]
+		comment_dict['message_id'] = row[1]
+		comment_dict['content'] = unidecode(row[2])
+		comment_dict['username'] = unidecode(row[3])
+		comment_dict['time'] = unidecode(row[4])
+
+		comments.append(comment_dict)
+
+	return comments
+			
+def build_username_JSON(username):
+	userinfo = []
+	cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
+	rawdata = cursor.fetchall
+
+	for row in rawdata:
+		user_dict = {}
+		user_dict['username'] = unidecode(row[0])
+		user_dict['profile_pic_id'] = row[2]
+		user_dict['reputation'] = row[3]
+
+		userinfo.append(user_dict)
+
+	return userinfo
 
 '''
 '	
@@ -33,16 +81,16 @@ app.logger.addHandler(file_handler)
 '''
 def initDB():
 	#SpotPosts(id, content, photo_id, reputation, longitude, latitude, visibility, user_id, time)
-	cursor.execute("CREATE TABLE IF NOT EXISTS SpotPosts(ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, content varchar(255), " + 
-		"rating INTEGER DEFAULT 0, longitude REAL NOT NULL, latitude REAL NOT NULL," + 
+	cursor.execute("CREATE TABLE IF NOT EXISTS SpotPosts(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, content varchar(255), " + 
+		"reputation INTEGER DEFAULT 0, longitude REAL NOT NULL, latitude REAL NOT NULL," + 
 		" username TEXT, time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL)")
 
-#	add_test_data()
-	#SpotPostComments(id, message_id, content, user_id, time)
-#	add_test_data("CREATE TABLE IF NOT EXISTS SpotPostComments(ID INTEGER PRIMARY KEY AUTO)")
+	#SpotPostComments(id, message_id, content, username, time)
+	cursor.execute("CREATE TABLE IF NOT EXISTS SpotPostComments(id INTEGER PRIMARY KEY AUTOINCREMENT, message_id INTEGER, content TEXT,"
+					+ "username TEXT, reputation INTEGER DEFAULT 0, time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL)")
 	
-	#Users(username, password, profile_pic)
-	cursor.execute("CREATE TABLE IF NOT EXISTS Users(username TEXT PRIMARY KEY, password TEXT, profile_pic_id INTEGER)")
+	#Users(username, password, profile_pic, reputation)
+	cursor.execute("CREATE TABLE IF NOT EXISTS Users(username TEXT PRIMARY KEY, password TEXT, profile_pic_id INTEGER, reputation INTEGER DEFAULT 0)")
 	
 	#Follows(follower_name, followee_name)
 	cursor.execute("CREATE TABLE IF NOT EXISTS Follows(follower_name TEXT, followee_name TEXT)")
@@ -115,34 +163,45 @@ def get_spotpost():
 	max_rating = request.args.get('max_rating')
 	username = request.args.get('username')
 	post_id = request.args.get('id')
+	latitude = request.args.get('latitude')
+	longitude = request.args.get('longitude')
+	radius = request.args.get('radius')
 
 	if post_id:
-		query = query + "WHERE ID = ?"
-		query_data = query_data + (post_id,);
+		query = query + "WHERE id = ?"
+		query_data = query_data + (post_id,)
 		where_query = True
+	if longitude and latitude and radius:
+		max_longitude, max_latitude, min_longitude, min_latitude = calc_bounding_coords(longitude, latitude, radius)
+		if not where_query:
+			query = query + " WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
+			query_data = query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
+		else:
+			query = query + " AND latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
+			query_data = query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
 	if username:
 		if not where_query:
 			query = query + " WHERE username = ?"
-			query_data = query_data + (username,);
+			query_data = query_data + (username,)
 			where_query = True
 		else:
 			query = query + " AND username = ?"
-			query_data = query_data + (username,);
+			query_data = query_data + (username,)
 	if min_rating:
 		if not where_query:
 			query = query + " WHERE rating >= ?"
-			query_data = query_data + (min_rating,);
+			query_data = query_data + (min_rating,)
 			where_query = True
 		else:
 			query = query + " AND rating >= ?"
-			query_data = query_data + (min_rating,);
+			query_data = query_data + (min_rating,)
 	if max_rating:
 		if not where_query:
 			query = query + " WHERE rating <= ?"
-			query_data = query_data + (max_rating,);
+			query_data = query_data + (max_rating,)
 			where_query = True
 		else:
-			query_data = query_data + (max_rating,);
+			query_data = query_data + (max_rating,)
 			query = query + " AND rating <= ?"
 
 	cursor.execute(query, query_data)	
@@ -156,153 +215,13 @@ def get_spotpost():
 		data_dict['rating'] = row[2]
 		data_dict['longitude'] = row[3]
 		data_dict['latitude'] = row[4]
-		data_dict['username'] = unidecode(row[5])
+		data_dict['username'] = build_username_JSON(unidecode(row[5]))
 		data_dict['time'] = unidecode(row[6])
+
+		data_dict['comments'] = build_comments_JSON(row[0])
 		data.append(data_dict)
 
 	return json.dumps(data)
-'''
-'	
-'	Processes input for getting a spotpost by ID.
-'
-'
-@app.route('/spotpost/getid', methods = ['GET', 'POST'])
-def get_spotpost_input_id():
-	if request.method == 'GET':
-		return render_template('get_spotpost_byid.html')
-	curr_id = request.form['id']
-	return redirect(url_for('get_spotpost', id = curr_id))
-
-'
-'	
-'	Prompts the user to input a username to search spotposts for.
-'
-'
-@app.route('/spotpost/getuser', methods = ['GET', 'POST'])
-def get_spotpost_input_user():
-	if request.method == 'GET':
-		return render_template('get_spotpost_byuser.html')
-	user = request.form['user']
-	return redirect(url_for('get_spotpost_user', user = user))
-
-'
-'
-'	Gets the spotpost associated with the ID.	
-'	@param id = ID of spotpost to get
-'
-'
-@app.route('/_get/<id>')
-def get_spotpost(id):
-	cursor.execute('SELECT * FROM test WHERE id = ?', (id,))
-	data = cursor.fetchall()
-	return render_template('get_spotpost.html', data_query = data)
-
-'
-'
-'	Gets and displays ALL spotposts.	
-'
-'
-@app.route('/spotpost/get/all')
-def get_all_spotposts():
-	cursor.execute('SELECT * FROM test')
-	data = cursor.fetchall()
-	
-	return render_template('get_spotpost.html', data_query = data)
-
-'
-'
-'	Gets the spotposts associated with the User.	
-'	@param user = User of spotpost to get.
-'
-'
-@app.route('/spotpost/get/user/<user>')
-def get_spotpost_user(user):
-	cursor.execute('SELECT * FROM test WHERE name = ?', (user,))
-	data = cursor.fetchall()
-	
-	return render_template('get_spotpost.html', data_query = data)
-
-'
-'
-'	Allows user to post spotposts, by manually inputting what to enter
-'	Into the database.
-'
-'
-@app.route('/spotpost/post', methods=['GET', 'POST'])
-def post_spotpost():
-	if request.method == 'POST':
-		title = request.form['title']
-		user = request.form['user']
-		content = request.form['content']
-		cursor.execute("INSERT INTO test(title, name, content) VALUES (?,?,?)", (title, user, content))
-		cursor.execute("SELECT MAX(ID) FROM test")
-		curr_id = cursor.fetchone()[0]
-		connect.commit()
-
-		return redirect(url_for('get_spotpost', id = curr_id))
-
-	return render_template('add_spotpost.html')
-
-
-'
-'
-'	Deletes a given spotpost.
-'	@input id = id of spotpost to delete.
-'
-'
-@app.route('/spotpost/delete/<id>')
-def delete_spotpost(id):
-	cursor.execute("DELETE FROM test WHERE id = ?", (id,))
-	connect.commit()
-	return render_template('delete_spotpost.html')
-
-'
-'
-'	Prompts the user to enter an ID for which spotpost to delete.
-'
-'
-@app.route('/spotpost/delete', methods = ['GET', 'POST'])
-def delete_spotpost_input():
-	if request.method == 'GET':
-		return render_template('delete_byid.html')
-
-	curr_id = request.form['id']
-	return redirect(url_for('delete_spotpost', id = curr_id))
-
-'
-'
-'	Updates a spotpost with given id. Prompts user to enter in new data for
-'	the spotpost, and will show the old data in the text fields.
-'	@param id = ID of spotpost to update	
-'
-'
-@app.route('/spotpost/update/<id>', methods = ['GET', 'POST'])
-def update_spotpost(id):
-	if request.method == 'GET':
-		cursor.execute('SELECT * FROM test WHERE id = ?', (id,))
-		data = cursor.fetchone()
-		return render_template('update_input.html', item = data)
-	else:
-		title = request.form['title']
-		user = request.form['user']
-		content = request.form['content']
-		cursor.execute("UPDATE test SET title = ?, name = ?, content = ? WHERE ID = ?", (title, user, content, id))
-		connect.commit()
-		return redirect(url_for('get_spotpost', id = id))
-
-'
-'
-'	Asks user for which spotpost they would like to Update.
-'
-'
-@app.route('/spotpost/update', methods = ['GET', 'POST'])
-def update_spotpost_input():
-	if request.method == 'GET':
-		return render_template('update_byid.html')
-
-	curr_id = request.form['id']
-	return redirect(url_for('update_spotpost', id = curr_id))
-'''
 
 '''
 '
