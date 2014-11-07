@@ -1,5 +1,4 @@
 from flask import Flask, session, request, abort, render_template, redirect, url_for
-import math
 import os
 import sqlite3
 
@@ -27,8 +26,8 @@ def calc_bounding_coords(lon, lat, radius):
 
 	km_per_long_deg = 111.320 * math.cos(lat / 180.0 * math.pi)
 
-	deltaLat = km_radius / 111.1
-	deltaLong = km_radius / km_per_long_deg
+	deltaLat = radius / 111.1
+	deltaLong = radius / km_per_long_deg
 
 	min_lat = lat - deltaLat
 	max_lat = lat + deltaLat
@@ -36,12 +35,12 @@ def calc_bounding_coords(lon, lat, radius):
 	max_long = lon + deltaLong
 
 
-	return max_long, max_lat, min_long, min_lat
+	return max_lng, max_lat, min_lng, min_lat
 
 def build_comments_JSON(curr_id):
 	comments = []
 	cursor.execute("SELECT * FROM SpotPostComments WHERE message_id = ?", (curr_id,))
-	data = cursor.fetchall()
+	data = cursor.fetchall
 
 	for row in data:
 		comment_dict = {}
@@ -49,28 +48,32 @@ def build_comments_JSON(curr_id):
 		comment_dict['message_id'] = row[1]
 		comment_dict['content'] = unidecode(row[2])
 		comment_dict['username'] = unidecode(row[3])
-		comment_dict['time'] = unidecode(row[5])
+		comment_dict['time'] = unidecode(row[4])
 
 		comments.append(comment_dict)
 
 	return comments
 			
 def build_username_JSON(username):
+	userinfo = []
 	cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
-	rawdata = cursor.fetchone()
+	rawdata = cursor.fetchall
 
-	user_dict = {}
-	user_dict['username'] = unidecode(rawdata[0])
-	user_dict['profile_pic_id'] = rawdata[2]
-	user_dict['reputation'] = rawdata[3]
+	for row in rawdata:
+		user_dict = {}
+		user_dict['username'] = unidecode(row[0])
+		user_dict['profile_pic_id'] = row[2]
+		user_dict['reputation'] = row[3]
 
-	return user_dict
+		userinfo.append(user_dict)
+
+	return userinfo
 
 '''
 '	
 '	Initializes the Database by creating each table. Below are the tables in relational format.
 '
-'	SpotPosts(id, content, photo_id, reputation, longitude, latitude, visibility, username, time)
+'	SpotPosts(id, content, photo_id, reputation, longitude, latitude, visibility, user_id, time)
 '	SpotPostComments(id, message_id, content, user_id, time)
 '	Users(username, password, profile_pic)
 '	Follows(follower_name, followee_name)
@@ -106,47 +109,47 @@ def add_test_data():
 	username = "TEST"
 	longitude = 18.0
 	latitude = 51.0
-	reputation = 25523
+	rating = 25523
 	
-	cursor.execute("INSERT INTO SpotPosts(content, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
+	cursor.execute("INSERT INTO SpotPosts(content, rating, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, rating, longitude, latitude, username))
 	connect.commit()
 
 	content = "SSSSSSSSSSSSSSSSSSS"
 	username = "TEST"
 	longitude = 42
 	latitude = 52
-	reputation = 244
+	rating = 244
 	
-	cursor.execute("INSERT INTO SpotPosts(content, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
+	cursor.execute("INSERT INTO SpotPosts(content, rating, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, rating, longitude, latitude, username))
 	connect.commit()
 
 	content = "Garbage Data is Best Data."
 	username = "Admin"
 	longitude = 34
 	latitude = 11
-	reputation = 23
+	rating = 23
 	
-	cursor.execute("INSERT INTO SpotPosts(content, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
+	cursor.execute("INSERT INTO SpotPosts(content, rating, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, rating, longitude, latitude, username))
 	connect.commit()
 
 	content = "Unpopular Opinion"
 	username = "Admin"
 	longitude = 3
 	latitude = 42
-	reputation = 0
+	rating = 0
 	
-	cursor.execute("INSERT INTO SpotPosts(content, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
+	cursor.execute("INSERT INTO SpotPosts(content, rating, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, rating, longitude, latitude, username))
 	connect.commit()
 
-@app.route('/_post', methods = ['POST'])
+@app.route('/post', methods = ['POST'])
 def post_spotpost():
 	content = unidecode(request.form['content'])
 	user_id = int(request.form['user_id'])
 	longitude = unidecode(request.form['latitude'])
 	latitude = unidecode(request.form['longitude'])
-	reputation = int(request.form['reputation'])
+	rating = int(request.form['rating'])
 	
-	cursor.execute("INSERT INTO SpotPosts(content, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
+	cursor.execute("INSERT INTO SpotPosts(content, rating, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, rating, longitude, latitude, username))
 	connect.commit()
 
 	return "Success"
@@ -156,13 +159,13 @@ def get_spotpost():
 	query = "SELECT * FROM SpotPosts"
 	query_data = ()
 	where_query = False
-	min_reputation = request.args.get('min_reputation')
-	max_reputation = request.args.get('max_reputation')
+	min_rating = request.args.get('min_rating')
+	max_rating = request.args.get('max_rating')
 	username = request.args.get('username')
 	post_id = request.args.get('id')
-	latitude = float(request.args.get('latitude'))
-	longitude = float(request.args.get('longitude'))
-	radius = float(request.args.get('radius'))
+	latitude = request.args.get('latitude')
+	longitude = request.args.get('longitude')
+	radius = request.args.get('radius')
 
 	if post_id:
 		query = query + "WHERE id = ?"
@@ -173,7 +176,6 @@ def get_spotpost():
 		if not where_query:
 			query = query + " WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
 			query_data = query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
-			where_query = True;
 		else:
 			query = query + " AND latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
 			query_data = query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
@@ -185,22 +187,22 @@ def get_spotpost():
 		else:
 			query = query + " AND username = ?"
 			query_data = query_data + (username,)
-	if min_reputation:
+	if min_rating:
 		if not where_query:
-			query = query + " WHERE reputation >= ?"
-			query_data = query_data + (min_reputation,)
+			query = query + " WHERE rating >= ?"
+			query_data = query_data + (min_rating,)
 			where_query = True
 		else:
-			query = query + " AND reputation >= ?"
-			query_data = query_data + (min_reputation,)
-	if max_reputation:
+			query = query + " AND rating >= ?"
+			query_data = query_data + (min_rating,)
+	if max_rating:
 		if not where_query:
-			query = query + " WHERE reputation <= ?"
-			query_data = query_data + (max_reputation,)
+			query = query + " WHERE rating <= ?"
+			query_data = query_data + (max_rating,)
 			where_query = True
 		else:
-			query_data = query_data + (max_reputation,)
-			query = query + " AND reputation <= ?"
+			query_data = query_data + (max_rating,)
+			query = query + " AND rating <= ?"
 
 	cursor.execute(query, query_data)	
 	rawdata = cursor.fetchall()
@@ -210,7 +212,7 @@ def get_spotpost():
 		data_dict = {}
 		data_dict['id'] = row[0]
 		data_dict['content'] = unidecode(row[1])
-		data_dict['reputation'] = row[2]
+		data_dict['rating'] = row[2]
 		data_dict['longitude'] = row[3]
 		data_dict['latitude'] = row[4]
 		data_dict['username'] = build_username_JSON(unidecode(row[5]))
