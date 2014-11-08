@@ -62,3 +62,6 @@ class DBManager:
 
 	def insert_spotpost(self):
 		connect.commit()
+
+	def insert_spotpost(self):
+		connect.commit()
