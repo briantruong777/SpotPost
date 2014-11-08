@@ -1,5 +1,4 @@
 import sqlite3
-import main
 
 connect = sqlite3.connect('data.db')
 cursor = connect.cursor()
@@ -59,7 +58,7 @@ def add_spotposts():
 	
 	cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?,?)", (content, title, reputation, longitude, latitude, username))
 	connect.commit()
-
+'''
 def add_users():
 	main.store_hash_pass("Admin", "BananaPeppers")
 	main.store_hash_pass("Crud Bonemeal", "Protein")
@@ -68,7 +67,7 @@ def add_users():
 	main.store_hash_pass("Tester", "Dijkstra")
 	main.store_hash_pass("Lurker", "NoPost")
 
-	connect.commit()
+	connect.commit()'''
 
 '''
 '
@@ -97,6 +96,3 @@ def clear_tables():
 def add_test_data():
 	clear_tables()
 	add_spotposts()
-	add_users()
-
-add_test_data()

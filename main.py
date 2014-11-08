@@ -12,7 +12,7 @@
 
 from flask 				import Flask, session, request, abort, render_template, redirect, url_for, escape
 from passlib.hash 		import sha256_crypt
-from resource.dbmanager import DBManager
+import resource.dbmanager
 
 #from comments 		import add_comment
 import os
@@ -27,6 +27,7 @@ except ImportError: import json
 
 connect = sqlite3.connect('data.db')
 cursor = connect.cursor()
+data_manager = DBManager()
 
 app = Flask(__name__)
 
