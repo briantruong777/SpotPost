@@ -125,6 +125,10 @@ Server API
 3. `<id>` must be a valid ID. Users can only vote on any given Spotpost once.
 4. There is minimal error checking, it won't crash the server though.
 
+### Upvoting Spotposts
+1. Same procedure and rules as Upvoting.
+2. However, you must go to `/spotpost/_downvote/<id>` instead. Replace `<id>` with the ID of the Spotpost.
+
 ### Deleting Spotposts
 1. Must be logged in as Admin to do this.
 2. Go to `/spotpost/_delete/<id>`.
