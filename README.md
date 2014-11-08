@@ -131,4 +131,4 @@ Server API
 3. Replace `<id>` with the ID of the spotpost you want to delete
 
 ### ERRORS
-1. Section under construction will be available once frontend gets further along.
+Section under construction will be available once frontend gets further along.

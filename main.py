@@ -34,18 +34,19 @@ file_handler = FileHandler("spotpost_log")
 file_handler.setLevel(logging.WARNING)
 app.logger.addHandler(file_handler)
 
-'''
-' Calculates bounding latitude and longitude.
-' Bounds by approximation using a square.
-'
-' @param lon = longitude of center point.
-' @param lat = latitude of center point.
-' @param radius = radius in meters of circle contained within square.
-' @return maximum longitude in bounding square.
-' @return maximum latitude in bounding square.
-' @return minimum longitude in bounding square.
-' @return minimum latitude in bounding square.
-'''
+###
+# Calculates bounding latitude and longitude.
+# Bounds by approximation using a square.
+#
+# @param lon = longitude of center point.
+# @param lat = latitude of center point.
+# @param radius = radius in meters of circle contained within square.
+#
+# @return maximum longitude in bounding square.
+# @return maximum latitude in bounding square.
+# @return minimum longitude in bounding square.
+# @return minimum latitude in bounding square.
+###
 def calc_bounding_coords(lon, lat, radius):
 	km_radius = radius / 1000
 
@@ -78,7 +79,20 @@ def build_comments_JSON(curr_id):
 		comments.append(comment_dict)
 
 	return comments
-			
+
+###
+#
+#	Builds dictionary to add to the JSON sent back on a get.
+#	Returned dictionary contains user info.
+#	
+#	@return A dictionary, see below.
+#
+#	Returned dictionary will follow this format:
+#	'username' : username of user.
+#	'profile_pic_id' : profile picture id of user.
+#	'reputation' : reputation of user.
+#
+###	
 def build_username_JSON(username):
 	userinfo = []
 	cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
@@ -94,18 +108,18 @@ def build_username_JSON(username):
 
 	return userinfo
 
-'''
-'	
-'	Initializes the Database by creating each table. Below are the tables in relational format.
-'
-'	SpotPosts(id, content, title, reputation, longitude, latitude, username, time)
-'	SpotPostComments(id, message_id, content, user_id, time)
-'	Users(username, password, profile_pic_id, reputation)
-'	Follows(follower_name, followee_name)
-'	Photos(id, photo)
-'	Rates(username, spotpost_id)
-'
-'''
+###
+#	
+#	Initializes the Database by creating each table. Below are the tables in relational format.
+#
+#	SpotPosts(id, content, title, reputation, longitude, latitude, username, time)
+#	SpotPostComments(id, message_id, content, user_id, time)
+#	Users(username, password, profile_pic_id, reputation)
+#	Follows(follower_name, followee_name)
+#	Photos(id, photo)
+#	Rates(username, spotpost_id)
+#
+###
 def initDB():
 	#SpotPosts(id, content, photo_id, reputation, longitude, latitude, visibility, user_id, time)
 	cursor.execute("CREATE TABLE IF NOT EXISTS SpotPosts(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, content TEXT, title TEXT," + 
@@ -128,18 +142,18 @@ def initDB():
 	#Rates(username, spotpost_id)
 	cursor.execute("CREATE TABLE IF NOT EXISTS Rates(username TEXT, spotpost_id INTEGER NOT NULL)")
 
-'''
-' 
-' Allows clientside to make a POST request to add data to the server database.
-' 
-' JSON must be constructed following convention below (ALL DATA IS REQUIRED):
-' "content"   		: "text of spotpost"
-' "username"  		: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
-' "latitude" 		: "latitude of spotpost"
-' "longitude" 		: "longitude of spotpost"
-' "reputation"   	: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING. 
-'
-'''
+###
+# 
+# Allows clientside to make a POST request to add data to the server database.
+# 
+# JSON must be constructed following convention below (ALL DATA IS REQUIRED):
+# "content"   		: "text of spotpost"
+# "username"  		: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
+# "latitude" 		: "latitude of spotpost"
+# "longitude" 		: "longitude of spotpost"
+# "reputation"   	: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING. 
+#
+###
 @app.route('/spotpost/_post', methods = ['POST'])
 def post_spotpost():
 	content = unidecode(request.form['content'])
@@ -153,22 +167,22 @@ def post_spotpost():
 
 	return "Success"
 
-'''
-' 
-' Allows clientside to make a GET request to get spotposts from the server database.
-' 
-' NOTE: TO ADD MORE ARGUMENTS THE CONVENTION ?min_reputation=10&max_reputation=100 MUST BE FOLLOWED.
-' NOTE: TO FURTHER THE POINT ABOVE I HAVE WRITTEN ?/& TO SHOW THAT ITS ONE OR THE OTHER DEPENDING ON PREVIOUS DATA.
-
-' URL must be constructed following convention below (NOT ALL DATA IS REQUIRED):
-' URL?min_reputation 	= minimum reputation to search for. 
-' URL?/&max_reputation 	= maximum reputation to search for. 	
-' URL?/&id 		 	= desired spotpost ID.
-' URL?/&latitude 	= latitude of center point of bounding square. 		NOTE: ALL 3 VARIABLES MUST BE PROVIDED TO USE BOUNDING SQUARE. OTHERWISE SEARCH IGNORES IT.
-' URL&longitude   	= longitude of center point of bounding square.
-' URL&radius        = "radius" of bounding square.
-'
-'''
+###
+# 
+# Allows clientside to make a GET request to get spotposts from the server database.
+# 
+# NOTE: TO ADD MORE ARGUMENTS THE CONVENTION ?min_reputation=10&max_reputation=100 MUST BE FOLLOWED.
+# NOTE: TO FURTHER THE POINT ABOVE I HAVE WRITTEN ?/& TO SHOW THAT ITS ONE OR THE OTHER DEPENDING ON PREVIOUS DATA.
+#
+# URL must be constructed following convention below (NOT ALL DATA IS REQUIRED):
+# URL?min_reputation 	= minimum reputation to search for. 
+# URL?/&max_reputation 	= maximum reputation to search for. 	
+# URL?/&id 		 	= desired spotpost ID.
+# URL?/&latitude 	= latitude of center point of bounding square. 		NOTE: ALL 3 VARIABLES MUST BE PROVIDED TO USE BOUNDING SQUARE. OTHERWISE SEARCH IGNORES IT.
+# URL&longitude   	= longitude of center point of bounding square.
+# URL&radius        = "radius" of bounding square.
+#
+###
 @app.route('/spotpost/_get')
 def get_spotpost():
 	query = "SELECT * FROM SpotPosts"
@@ -239,16 +253,39 @@ def get_spotpost():
 
 	return json.dumps(data)
 
-'''
-'
-'	Upvotes a given spotpost.
-'	
-'	@param id = id of SpotPost.
-'
-'''
+###
+#
+#	Upvotes a given spotpost.
+#	
+#	@param id = id of SpotPost.
+#
+###
 @app.route('/spotpost/_upvote/<id>')
 def upvote_spotpost(id):
 	session['username'] = "Admin"
+	return rate_post(1, id)
+
+###
+#
+#	Downvotes a given spotpost.
+#	
+#	@param id = id of SpotPost.
+#
+###
+@app.route('/spotpost/_downvote/<id>')
+def downvote_spotpost(id):
+	session['username'] = "Admin"
+	return rate_post(-1, id)
+
+###
+#
+#	Helper function for rating. Changes reputation of SpotPost by change_in_reputation
+#
+#	@param change_in_reputation = number to be added to reputation.
+#	@param id = id of SpotPost.
+#
+###
+def rate_post(change_in_reputation, id):
 	if 'username' in session:
 		cursor.execute("SELECT * FROM Rates WHERE username = ? AND spotpost_id = ?", (session['username'], id))
 		curr_user_data = cursor.fetchone()
@@ -258,23 +295,22 @@ def upvote_spotpost(id):
 		spotpost_creator = spotpost_data[6]
 
 		if not curr_user_data and spotpost_data:		#If the user HASN'T upvoted, and the SpotPost exists.
-			cursor.execute("UPDATE SpotPosts SET reputation = reputation + 1 WHERE id = ?", (id,))					# Increase rep of SpotPost
+			cursor.execute("UPDATE SpotPosts SET reputation = reputation + ? WHERE id = ?", (change_in_reputation, id))					# Increase rep of SpotPost
 			cursor.execute("INSERT INTO Rates (username, spotpost_id) VALUES (?, ?)", (session['username'], id))	# Insert relation into Rates
-			cursor.execute("UPDATE Users SET reputation = reputation + 1 WHERE username = ?", (spotpost_creator,))	# Increase rep of Creator
+			cursor.execute("UPDATE Users SET reputation = reputation + ? WHERE username = ?", (change_in_reputation, spotpost_creator))	# Increase rep of Creator
 			connect.commit()
 			return "SUCCESS"
 		else:
 			return "ERROR USER ALREADY VOTED OR SPOTPOST DOESN'T EXIST"
 	else:
 		return "ERROR USER NOT LOGGED IN"
-
-'''
-'
-'	Deletes a given spotpost. Must be logged in as Admin
-'	
-'	@param id = id of SpotPost.
-'
-'''
+###
+#
+#	Deletes a given spotpost. Must be logged in as Admin
+#	
+#	@param id = id of SpotPost.
+#
+###
 @app.route('/spotpost/_delete/<id>')
 def delete_spotpost(id):
 	if session['username'] is "Admin":
@@ -282,11 +318,11 @@ def delete_spotpost(id):
 		return "SUCCESS"
 	else:
 		return "ERROR NOT LOGGED IN AS ADMIN"
-'''
-'
-'	Logs the user in if the user exists and the password is correct.
-'
-'''
+###
+#
+#	Logs the user in if the user exists and the password is correct.
+#
+###
 @app.route('/_login', methods =['GET', 'POST'])
 def login():
 	if request.method == 'POST':
@@ -318,34 +354,34 @@ def login():
         </form>
     '''
 
-'''
-'
-'	Logs the user out.
-'
-'''
+###
+#
+#	Logs the user out.
+#
+###
 @app.route('/_logout')
 def logout():
 	session.pop('username', None)
 	return "LOGGED OUT."
 
-'''
-'
-'	Securely stores the password in the database
-'
-'	@param username = username of user.
-'	@param password = password of user.
-'
-'''
+###
+#
+#	Securely stores the password in the database
+#
+#	@param username = username of user.
+#	@param password = password of user.
+#
+###
 def store_hash_pass(username, password):
 	pass_hash = sha256_crypt.encrypt(password)
 	cursor.execute("INSERT INTO Users(username, password) VALUES(?, ?)", (username, pass_hash))
 	connect.commit()
 
-'''
-'
-'	Registers the user into the Database.
-'
-'''
+###
+#
+#	Registers the user into the Database.
+#
+###
 @app.route('/_register', methods =['GET', 'POST'])
 def register():
 	if request.method == 'POST':
@@ -363,11 +399,11 @@ def register():
         </form>
     '''
 
-'''
-'
-'	Shows homepage, simply serves as a way to get to other pages.
-'
-'''
+###
+#
+#	Shows homepage, simply serves as a way to get to other pages.
+#
+###
 @app.route('/')
 def index():
 	#if 'username' in session:
