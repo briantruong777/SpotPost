@@ -56,35 +56,35 @@ Server API
 
 ### Getting Spotposts
 
-* In order to obtain a spotpost a GET request must be made to 'www.spotpost.me/spotpost/_get'.
+* In order to obtain a spotpost a GET request must be made to `www.spotpost.me/spotpost/_get`.
 * This will return a JSON file containing either all Spotposts or Spotposts based on your search parameters.
-* To add search parameters add '?<parameter name> = <parameter value>' to the url for the first parameter.
-  for more parameters add '&<parameter name> = <parameter value>'.
-* List of possible parameters, replace '<parameter name>' from above with this.
-	* 'min_rating' : Minimum rating of Spotpost to search for.
-	* 'max_rating' : Maximum rating of Spotpost to search for.
-	* 'username'   : Author of Spotpost to search for.
-	* 'id'  	   : ID of Spotpost. This overrides the other search parameters.
+* To add search parameters add '?\<parameter name\> = \<parameter value\>' to the url for the first parameter.
+  for more parameters add '&\<parameter name\> = \<parameter value\>'.
+* List of possible parameters, replace '\<parameter name\>' from above with this.
+	* `min_rating` : Minimum rating of Spotpost to search for.
+	* `max_rating` : Maximum rating of Spotpost to search for.
+	* `username`   : Author of Spotpost to search for.
+	* `id`  	   : ID of Spotpost. This overrides the other search parameters.
 	* Location Based parameters. All three must be included, search ignores proper subsets of the three.
-		* 'latitude'  : Latitude of center point of bounding square.
-		* 'longitude' : Longitude of center point of bounding square. 
-		* 'radius'    : Radius of the circle that the square inscribes.
+		* `latitude`  : Latitude of center point of bounding square.
+		* `longitude` : Longitude of center point of bounding square. 
+		* `radius`    : Radius of the circle that the square inscribes.
 * JSON contains an array of Spotposts based on your search parameters.
 * Each Spotpost is constructed as follows.
-		* 'id' 		  	: ID of Spotpost.
-		* 'content'  	: Content of Spotpost.
-		* 'rating'   	: Rating of Spotpost.
-		* 'longitude'	: Longitude of Spotpost.
-		* 'latitude'  	: Latitude of Spotpost.
-		* 'username'  	: A dictionary containing the following.
-			* 'username'   : Name of user who posted the Spotpost.
-			* 'reputation' : Reputation of users who posted the Spotpost.
-		* 'comments'  	: Array of comments, where each comment contains the following.
-			* 'id'		   : ID of comment.
-			* 'message_id' : Spotpost ID of the spotpost the comment is from.
-			* 'content'    : Content of the comment.
-			* 'username'   : Username of person who posted comment.
-			* 'time'       : Date and Time comment was posted.
-		* 'time'		: Date and Time Spotpost was posted. 
+		* `id` 		  	: ID of Spotpost.
+		* `content`  	: Content of Spotpost.
+		* `rating`   	: Rating of Spotpost.
+		* `longitude`	: Longitude of Spotpost.
+		* `latitude`  	: Latitude of Spotpost.
+		* `username`  	: A dictionary containing the following.
+			* `username`   : Name of user who posted the Spotpost.
+			* `reputation` : Reputation of users who posted the Spotpost.
+		* `comments`  	: Array of comments, where each comment contains the following.
+			* `id`		   : ID of comment.
+			* `message_id` : Spotpost ID of the spotpost the comment is from.
+			* `content`    : Content of the comment.
+			* `username`   : Username of person who posted comment.
+			* `time`       : Date and Time comment was posted.
+		* `time`		: Date and Time Spotpost was posted. 
 
 ### Posting Spotposts
