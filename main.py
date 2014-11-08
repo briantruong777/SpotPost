@@ -10,7 +10,8 @@
 ' 
 '''
 
-from flask import Flask, session, request, abort, render_template, redirect, url_for
+from flask import Flask, session, request, abort, render_template, redirect, url_for, escape
+from passlib.hash import sha256_crypt
 import os
 import sqlite3
 
@@ -97,9 +98,9 @@ def build_username_JSON(username):
 '	
 '	Initializes the Database by creating each table. Below are the tables in relational format.
 '
-'	SpotPosts(id, content, photo_id, reputation, longitude, latitude, visibility, username, time)
+'	SpotPosts(id, content, title, reputation, longitude, latitude, username, time)
 '	SpotPostComments(id, message_id, content, user_id, time)
-'	Users(username, password, profile_pic)
+'	Users(username, password, profile_pic_id, reputation)
 '	Follows(follower_name, followee_name)
 '	Photos(id, photo)
 '	Rates(username, spotpost_id)
@@ -107,7 +108,7 @@ def build_username_JSON(username):
 '''
 def initDB():
 	#SpotPosts(id, content, photo_id, reputation, longitude, latitude, visibility, user_id, time)
-	cursor.execute("CREATE TABLE IF NOT EXISTS SpotPosts(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, content varchar(255), " + 
+	cursor.execute("CREATE TABLE IF NOT EXISTS SpotPosts(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, content TEXT, title TEXT," + 
 		"reputation INTEGER DEFAULT 0, longitude REAL NOT NULL, latitude REAL NOT NULL," + 
 		" username TEXT, time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL)")
 
@@ -116,16 +117,16 @@ def initDB():
 					+ "username TEXT, reputation INTEGER DEFAULT 0, time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL)")
 	
 	#Users(username, password, profile_pic, reputation)
-	cursor.execute("CREATE TABLE IF NOT EXISTS Users(username TEXT PRIMARY KEY, password TEXT, profile_pic_id INTEGER, reputation INTEGER DEFAULT 0)")
+	cursor.execute("CREATE TABLE IF NOT EXISTS Users(username varchar(24) PRIMARY KEY, password TEXT, profile_pic_id INTEGER DEFAULT -1, reputation INTEGER DEFAULT 0)")
 	
 	#Follows(follower_name, followee_name)
 	cursor.execute("CREATE TABLE IF NOT EXISTS Follows(follower_name TEXT, followee_name TEXT)")
 
 	#Photos(id, photo)
-	#cursor.execute("CREATE TABLE IF NOT EXISTS test(num INTEGER, words TEXT, morenum INTEGER, user TEXT)")
+	cursor.execute("CREATE TABLE IF NOT EXISTS Photos(id INTEGER PRIMARY KEY AUTOINCREMENT, photo_url TEXT)")
 
 	#Rates(username, spotpost_id)
-	cursor.execute("CREATE TABLE IF NOT EXISTS Rates(username TEXT, spotpost_id INTEGER")
+	cursor.execute("CREATE TABLE IF NOT EXISTS Rates(username TEXT, spotpost_id INTEGER NOT NULL)")
 
 '''
 ' 
@@ -142,12 +143,12 @@ def initDB():
 @app.route('/spotpost/_post', methods = ['POST'])
 def post_spotpost():
 	content = unidecode(request.form['content'])
+	title = unidecode(request.form['title'])
 	username = unidecode(request.form['username'])
 	longitude = float(unidecode(request.form['latitude']))
 	latitude = float(unidecode(request.form['longitude']))
 	reputation = int(request.form['reputation'])
-	
-	cursor.execute("INSERT INTO SpotPosts(content, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
+	cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
 	connect.commit()
 
 	return "Success"
@@ -226,11 +227,12 @@ def get_spotpost():
 		data_dict 				= {}
 		data_dict['id'] 		= row[0]
 		data_dict['content'] 	= unidecode(row[1])
-		data_dict['reputation'] = row[2]
-		data_dict['longitude']	= row[3]
-		data_dict['latitude'] 	= row[4]
-		data_dict['username'] 	= build_username_JSON(unidecode(row[5]))
-		data_dict['time'] 		= unidecode(row[6])
+		data_dict['title']		= unidecode(row[2])
+		data_dict['reputation'] = row[3]
+		data_dict['longitude']	= row[4]
+		data_dict['latitude'] 	= row[5]
+		data_dict['username'] 	= build_username_JSON(unidecode(row[6]))
+		data_dict['time'] 		= unidecode(row[7])
 		data_dict['comments'] 	= build_comments_JSON(row[0])
 
 		data.append(data_dict)
@@ -239,11 +241,139 @@ def get_spotpost():
 
 '''
 '
+'	Upvotes a given spotpost.
+'	
+'	@param id = id of SpotPost.
+'
+'''
+@app.route('/spotpost/_upvote/<id>')
+def upvote_spotpost(id):
+	session['username'] = "Admin"
+	if 'username' in session:
+		cursor.execute("SELECT * FROM Rates WHERE username = ? AND spotpost_id = ?", (session['username'], id))
+		curr_user_data = cursor.fetchone()
+
+		cursor.execute("SELECT * FROM SpotPosts WHERE id = ?", (id,))
+		spotpost_data = cursor.fetchone()
+		spotpost_creator = spotpost_data[6]
+
+		if not curr_user_data and spotpost_data:		#If the user HASN'T upvoted, and the SpotPost exists.
+			cursor.execute("UPDATE SpotPosts SET reputation = reputation + 1 WHERE id = ?", (id,))					# Increase rep of SpotPost
+			cursor.execute("INSERT INTO Rates (username, spotpost_id) VALUES (?, ?)", (session['username'], id))	# Insert relation into Rates
+			cursor.execute("UPDATE Users SET reputation = reputation + 1 WHERE username = ?", (spotpost_creator,))	# Increase rep of Creator
+			connect.commit()
+			return "SUCCESS"
+		else:
+			return "ERROR USER ALREADY VOTED OR SPOTPOST DOESN'T EXIST"
+	else:
+		return "ERROR USER NOT LOGGED IN"
+
+'''
+'
+'	Deletes a given spotpost. Must be logged in as Admin
+'	
+'	@param id = id of SpotPost.
+'
+'''
+@app.route('/spotpost/_delete/<id>')
+def delete_spotpost(id):
+	if session['username'] is "Admin":
+		cursor.execute("DELETE FROM SpotPosts WHERE id = ?", (id,))
+		return "SUCCESS"
+	else:
+		return "ERROR NOT LOGGED IN AS ADMIN"
+'''
+'
+'	Logs the user in if the user exists and the password is correct.
+'
+'''
+@app.route('/_login', methods =['GET', 'POST'])
+def login():
+	if request.method == 'POST':
+		client_username = request.form['username']
+		client_password = request.form['password']
+
+		if client_username:
+			cursor.execute("SELECT * FROM Users WHERE username = ?", (client_username,))
+			data = cursor.fetchone()
+
+			if data:
+				db_hash = data[1]
+				if(sha256_crypt.verify(client_password, db_hash)):
+					session['username'] = request.form['username']
+					return redirect(url_for('index'))
+				else:
+					return "INVALID PASSWORD"
+			else:
+				return "INVALID USERNAME"
+		else:
+			return "ERROR"
+	
+	#@TODO REPLACE WITH LOGIN FORM
+	return '''
+        <form action="" method="post">
+            <p><input type=text name=username>
+            <p><input type=text name=password>
+            <p><input type=submit value=Login>
+        </form>
+    '''
+
+'''
+'
+'	Logs the user out.
+'
+'''
+@app.route('/_logout')
+def logout():
+	session.pop('username', None)
+	return "LOGGED OUT."
+
+'''
+'
+'	Securely stores the password in the database
+'
+'	@param username = username of user.
+'	@param password = password of user.
+'
+'''
+def store_hash_pass(username, password):
+	pass_hash = sha256_crypt.encrypt(password)
+	cursor.execute("INSERT INTO Users(username, password) VALUES(?, ?)", (username, pass_hash))
+	connect.commit()
+
+'''
+'
+'	Registers the user into the Database.
+'
+'''
+@app.route('/_register', methods =['GET', 'POST'])
+def register():
+	if request.method == 'POST':
+		client_username = request.form['username']
+		client_password = request.form['password']
+
+		store_hash_pass(client_username, client_password)
+
+	#@TODO REPLACE WITH REGISTRATION FORM
+	return '''
+        <form action="" method="post">
+            <p><input type=text name=username>
+            <p><input type=text name=password>
+            <p><input type=submit value=Login>
+        </form>
+    '''
+
+'''
+'
 '	Shows homepage, simply serves as a way to get to other pages.
 '
 '''
 @app.route('/')
 def index():
+	#if 'username' in session:
+	#	return 'Logged in as %s' % escape(session['username'])
+	#return 'You are not logged in'
+	session['username'] = "Admin"
 	return render_template('index.html')
 
 initDB()
@@ -251,5 +381,7 @@ initDB()
 if __name__ == '__main__':
 	# Runs on port 5000 by default
 	# url: "localhost:5000"
+	# Secret Key for sessions.
+	app.secret_key = 'Bv`L>?h^`qeQr6f7c$DK.E-gvMXZR+'
 	app.run(host="0.0.0.0")
 	connect.close()
