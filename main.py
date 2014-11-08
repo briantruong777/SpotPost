@@ -10,12 +10,15 @@
 ' 
 '''
 
-from flask import Flask, session, request, abort, render_template, redirect, url_for, escape
-from passlib.hash import sha256_crypt
+from flask 				import Flask, session, request, abort, render_template, redirect, url_for, escape
+from passlib.hash 		import sha256_crypt
+from resource.dbmanager import DBManager
+
+#from comments 		import add_comment
 import os
 import sqlite3
 
-# For decoding JSON request data. Strings come in unicode format.
+# For decoding JSON request data. Strings come in unicode format. Possibly useless :(.
 from unidecode import unidecode
 
 # If Python2.6, simplejson is better than json, but in Python2.7, simplejson became json
@@ -35,6 +38,7 @@ file_handler.setLevel(logging.WARNING)
 app.logger.addHandler(file_handler)
 
 ###
+#
 # Calculates bounding latitude and longitude.
 # Bounds by approximation using a square.
 #
@@ -46,6 +50,7 @@ app.logger.addHandler(file_handler)
 # @return maximum latitude in bounding square.
 # @return minimum longitude in bounding square.
 # @return minimum latitude in bounding square.
+#
 ###
 def calc_bounding_coords(lon, lat, radius):
 	km_radius = radius / 1000
@@ -185,16 +190,16 @@ def post_spotpost():
 ###
 @app.route('/spotpost/_get')
 def get_spotpost():
-	query = "SELECT * FROM SpotPosts"
-	query_data = ()
-	where_query = False
-	min_reputation = request.args.get('min_reputation')
-	max_reputation = request.args.get('max_reputation')
-	username = request.args.get('username')
-	post_id = request.args.get('id')
-	latitude = request.args.get('latitude')
-	longitude = request.args.get('longitude')
-	radius = request.args.get('radius')
+	query 			= "SELECT * FROM SpotPosts"
+	query_data 		= ()
+	where_query 	= False
+	min_reputation 	= request.args.get('min_reputation')
+	max_reputation 	= request.args.get('max_reputation')
+	username 		= request.args.get('username')
+	post_id 		= request.args.get('id')
+	latitude 		= request.args.get('latitude')
+	longitude 		= request.args.get('longitude')
+	radius 			= request.args.get('radius')
 
 	if post_id:
 		query = query + "WHERE id = ?"
@@ -203,35 +208,36 @@ def get_spotpost():
 	if longitude and latitude and radius:
 		max_longitude, max_latitude, min_longitude, min_latitude = calc_bounding_coords(longitude, latitude, radius)
 		if not where_query:
-			query = query + " WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
-			query_data = query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
+			query 		= query + " WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
+			query_data 	= query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
+			where_query = True
 		else:
-			query = query + " AND latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
-			query_data = query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
+			query 		= query + " AND latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
+			query_data 	= query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
 	if username:
 		if not where_query:
-			query = query + " WHERE username = ?"
-			query_data = query_data + (username,)
+			query 		= query + " WHERE username = ?"
+			query_data 	= query_data + (username,)
 			where_query = True
 		else:
-			query = query + " AND username = ?"
-			query_data = query_data + (username,)
+			query 		= query + " AND username = ?"
+			query_data 	= query_data + (username,)
 	if min_reputation:
 		if not where_query:
-			query = query + " WHERE reputation >= ?"
-			query_data = query_data + (min_reputation,)
+			query 		= query + " WHERE reputation >= ?"
+			query_data 	= query_data + (min_reputation,)
 			where_query = True
 		else:
-			query = query + " AND reputation >= ?"
-			query_data = query_data + (min_reputation,)
+			query 		= query + " AND reputation >= ?"
+			query_data 	= query_data + (min_reputation,)
 	if max_reputation:
 		if not where_query:
-			query = query + " WHERE reputation <= ?"
-			query_data = query_data + (max_reputation,)
+			query 		= query + " WHERE reputation <= ?"
+			query_data 	= query_data + (max_reputation,)
 			where_query = True
 		else:
-			query_data = query_data + (max_reputation,)
-			query = query + " AND reputation <= ?"
+			query_data 	= query_data + (max_reputation,)
+			query 		= query + " AND reputation <= ?"
 
 	cursor.execute(query, query_data)	
 	rawdata = cursor.fetchall()
@@ -252,6 +258,24 @@ def get_spotpost():
 		data.append(data_dict)
 
 	return json.dumps(data)
+
+###
+#
+#
+#
+###
+@app.route('/comment/_post', methods = ['POST'])
+def post_comment():
+	content = unidecode(request.form['content'])
+	title = unidecode(request.form['title'])
+	username = unidecode(request.form['username'])
+	longitude = float(unidecode(request.form['latitude']))
+	latitude = float(unidecode(request.form['longitude']))
+	reputation = int(request.form['reputation'])
+	cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
+	connect.commit()
+
+	return "Success"
 
 ###
 #
@@ -318,6 +342,7 @@ def delete_spotpost(id):
 		return "SUCCESS"
 	else:
 		return "ERROR NOT LOGGED IN AS ADMIN"
+
 ###
 #
 #	Logs the user in if the user exists and the password is correct.
@@ -325,25 +350,23 @@ def delete_spotpost(id):
 ###
 @app.route('/_login', methods =['GET', 'POST'])
 def login():
-	if request.method == 'POST':
-		client_username = request.form['username']
+	if request.method == 'POST' and 'username' in request.form.keys():
 		client_password = request.form['password']
 
-		if client_username:
-			cursor.execute("SELECT * FROM Users WHERE username = ?", (client_username,))
-			data = cursor.fetchone()
+		cursor.execute("SELECT * FROM Users WHERE username = ?", (client_username,))
+		data = cursor.fetchone()
 
-			if data:
-				db_hash = data[1]
-				if(sha256_crypt.verify(client_password, db_hash)):
-					session['username'] = request.form['username']
-					return redirect(url_for('index'))
-				else:
-					return "INVALID PASSWORD"
+		if data:
+			db_hash = data[1]
+			if(sha256_crypt.verify(client_password, db_hash)):
+				session['username'] = request.form['username']
+				return redirect(url_for('index'))
 			else:
-				return "INVALID USERNAME"
+				return "INVALID PASSWORD"
 		else:
-			return "ERROR"
+			return "INVALID USERNAME"
+	else:
+		return "ERROR"
 	
 	#@TODO REPLACE WITH LOGIN FORM
 	return '''

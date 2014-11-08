@@ -98,3 +98,5 @@ def add_test_data():
 	clear_tables()
 	add_spotposts()
 	add_users()
+
+add_test_data()
