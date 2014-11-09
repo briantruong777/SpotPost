@@ -128,10 +128,11 @@ Server API
 	* `reputation`	: Custom starting reputation of SpotPost. Default is 0.
 
 ### Updating Spotposts
-1. In order to update you must make a `POST` request to `/spotpost/_update`.
-2. You must also send a JSON file containing the data associated with the SpotPost. 
-3. Format the JSON in the following way.
-4. The ID field is REQUIRED, however all the others are optional, but you must include one at least.
+1. You must be logged in as `Admin` to update spotposts.
+2. In order to update you must make a `POST` request to `/spotpost/_update`.
+3. You must also send a JSON file containing the data associated with the SpotPost. 
+4. Format the JSON in the following way.
+5. The ID field is REQUIRED, however all the others are optional, but you must include one at least.
 	* `id`			: id of SpotPost. 
 	* `content`		: content of SpotPost.
 	* `latitude` 	: latitude position of SpotPost.
