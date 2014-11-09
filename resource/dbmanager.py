@@ -2,7 +2,8 @@
 '	
 '	Spotpost serverside. 
 '	--------------------
-'	Deals with comments to SpotPosts.
+'	Manager for the database, all SQL interaction is done by
+' 	the manager.
 '
 '	@author Jakub Wlodarczyk
 '	@author Brian Truong
@@ -112,10 +113,47 @@ class DBManager:
 		#Photos(id, photo)
 		cursor.execute("CREATE TABLE IF NOT EXISTS Photos(id INTEGER PRIMARY KEY AUTOINCREMENT, photo_url TEXT)")
 
-		#Rates(username, spotpost_id)
-		cursor.execute("CREATE TABLE IF NOT EXISTS Rates(username TEXT, spotpost_id INTEGER NOT NULL)")
+		#Rates(username, spotpost_id, comment_id)
+		cursor.execute("CREATE TABLE IF NOT EXISTS Rates(username TEXT, spotpost_id INTEGER DEFAULT -1 NOT NULL, comment_id INTEGER DEFAULT -1 NOT NULL)")
 
 		testdata.add_test_data()
+
+	###
+	#
+	# Inserts follower relation into the database.
+	# Prevents duplicates.
+	#
+	# @param follower_name = username of follower.
+	# @param followee_name = username of followee.
+	#
+	###
+	def insert_follow_relation(self, follower_name, followee_name):
+		cursor.execute("SELECT * FROM Follows WHERE follower_name = ? AND followee_name = ?", (follower_name, followee_name))
+		data = cursor.fetchone()
+		if data:
+			return "ERROR"
+		else:
+			cursor.execute("INSERT INTO Follows(follower_name, followee_name) VALUES (?,?)", (follower_name, followee_name))
+			connect.commit()
+			return "SUCCESS"
+
+	###
+	#
+	# Deletes follower relation from the database.
+	#
+	# @param follower_name = username of follower.
+	# @param followee_name = username of followee.
+	#
+	###
+	def delete_follow_relation(self, follower_name, followee_name):
+		cursor.execute("SELECT * FROM Follows WHERE follower_name = ? AND followee_name = ?", (follower_name, followee_name))
+		data = cursor.fetchone()
+
+		if data:
+			cursor.execute("DELETE FROM Follows WHERE follower_name = ? AND followee_name = ?", (follower_name, followee_name))
+			connect.commit()
+		else
+			return "ERROR"
 
 	###
 	# 
@@ -142,7 +180,7 @@ class DBManager:
 
 		if reputation:
 			cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, client_username))
-		else
+		else:
 			cursor.execute("INSERT INTO SpotPosts(content, title, longitude, latitude, username) VALUES (?,?,?,?)", (content, longitude, latitude, client_username))
 
 		connect.commit()
@@ -254,6 +292,15 @@ class DBManager:
 
 		return data
 
+	###
+	#
+	#	Checks if the login information is correct.
+	#
+	#	@param username = username to be checked.
+	#	@param password = password to be checked.
+	#	@return true if information is correct, false otherwise.
+	#
+	###
 	def validate_user(self, username, password):
 		cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
 		data = cursor.fetchone()
@@ -270,7 +317,7 @@ class DBManager:
 
 	###
 	#
-	#	Helper function for rating. Changes reputation of SpotPost by change_in_reputation
+	#	Function for rating. Changes reputation of SpotPost by change_in_reputation
 	#
 	#	@param change_in_reputation = number to be added to reputation.
 	#	@param id = id of SpotPost.
@@ -282,9 +329,9 @@ class DBManager:
 
 		cursor.execute("SELECT * FROM SpotPosts WHERE id = ?", (id,))
 		spotpost_data = cursor.fetchone()
-		spotpost_creator = spotpost_data[6]
 
 		if not curr_user_data and spotpost_data:		#If the user HASN'T upvoted, and the SpotPost exists.
+			spotpost_creator = spotpost_data[6]
 			cursor.execute("UPDATE SpotPosts SET reputation = reputation + ? WHERE id = ?", (change_in_reputation, id))					# Increase rep of SpotPost
 			cursor.execute("INSERT INTO Rates (username, spotpost_id) VALUES (?, ?)", (username, id))	# Insert relation into Rates
 			cursor.execute("UPDATE Users SET reputation = reputation + ? WHERE username = ?", (change_in_reputation, spotpost_creator))	# Increase rep of Creator
@@ -295,6 +342,102 @@ class DBManager:
 
 	###
 	#
+	#	Function for rating. Changes reputation of Comment by change_in_reputation
+	#
+	#	@param change_in_reputation = number to be added to reputation.
+	#	@param id = id of Comment.
+	#	
+	#	@TODO ERROR CHECKING.
+	###
+	def rate_comment(self, change_in_reputation, id, username):
+		cursor.execute("SELECT * FROM Rates WHERE username = ? AND comment_id = ?", (username, id))
+		curr_user_data = cursor.fetchone()
+
+		cursor.execute("SELECT * FROM SpotPostComments WHERE id = ?", (id,))
+		spotpost_data = cursor.fetchone()
+
+		if not curr_user_data and spotpost_data:		#If the user HASN'T upvoted, and the comment exists.
+			comment_creator = spotpost_data[6]
+			cursor.execute("UPDATE SpotPostComments SET reputation = reputation + ? WHERE id = ?", (change_in_reputation, id))					# Increase rep of comment
+			cursor.execute("INSERT INTO Rates (username, spotpost_id) VALUES (?, ?)", (username, id))	# Insert relation into Rates
+			cursor.execute("UPDATE Users SET reputation = reputation + ? WHERE username = ?", (change_in_reputation, comment_creator))	# Increase rep of Creator
+			connect.commit()
+			return "SUCCESS"
+		else:
+			return "ERROR USER ALREADY VOTED OR SPOTPOST DOESN'T EXIST"
+
+	###
+	#
+	#	Updates a given spotpost with new values. Must be logged in as Admin.
+	#
+	#	JSON must be constructed following convention below (REQUIRES AT LEAST ONE TO BE ENTERED):
+	#	"id"				: "id of spotpost"
+	#	"content"   		: "text of spotpost"
+	#	"username"  		: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
+	#	"latitude" 			: "latitude of spotpost"
+	#	"longitude" 		: "longitude of spotpost"
+	#	"reputation"   		: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING. 
+	#
+	###
+	def update_post(self, form):
+		query = "UPDATE SpotPosts SET "
+		query_data = ()
+
+		first_data  = True
+		post_id 	= form['id']
+		content 	= form['content']
+		username 	= form['username']
+		latitude 	= form['latitude']
+		longitude 	= form['longitude']
+		reputation 	= form['reputation']
+		
+		where_query = "WHERE id = ?"
+
+		if content:
+			query = query + "content = ?"
+			query_data = query_data + (content,)
+			first_data = False
+		if username:
+			if first_data:
+				query = query + "username = ?"
+				first_data = False
+			else:
+				query = query + ", username = ?"
+			query_data = query_data + (username,)
+		if latitude:
+			if first_data:
+				query = query + "latitude = ?"
+				first_data = False
+			else:
+				query = query + ", latitude = ?"
+			query_data = query_data + (latitude,)
+		if longitude:
+			if first_data:
+				query = query + "longitude = ?"
+				first_data = False
+			else:
+				query = query + ", longitude = ?"
+			query_data = query_data + (longitude,)
+		if reputation:
+			if first_data:
+				query = query + "reputation = ?"
+				first_data = False
+			else:
+				query = query + ", reputation = ?"
+			query_data = query_data + (reputation,)
+
+		if first_data:
+			return "ERROR MUST ENTER IN ONE VALUE."
+		
+		query = query + where_query
+		query_data = query_data + (id,)
+
+		cursor.execute(query, query_data)
+		connect.commit()
+
+
+	###
+	#
 	#	Deletes a spotpost with id provided.
 	#
 	#	@param id = id of spotpost to delete.
@@ -302,3 +445,5 @@ class DBManager:
 	###
 	def delete_post(self, id):
 		cursor.execute("DELETE FROM SpotPosts WHERE id = ?", (id,))
+		connect.commit()
+			

@@ -55,24 +55,23 @@ Server API
 ========
 
 ### Generating Test Data
-1. Simple run `python testdata.py`
+1. Simply run `python testdata.py`
 2. This will empty the tables and add in test data.
-3. Please note that IDs will change.
 
 ### Admin Info
 1. Admin in test data's password is `BananaPeppers`
 
 ### Registering a User
-1. Send a POST request to `/_register` containing the user's info.
+1. Send a `POST` request to `/_register` containing the user's info.
 2. User's info is expected as a JSON following this format:
 	* `username` : Username to register.
 	* `password` : Password of new user.
 3. Server will store the password encrypted using SHA256-encrypt.
-4. Will not log user in at this moment.
+4. This will log the person in once they have registered. 
 5. It is also important to note this does not handle duplicates yet.
 
 ### Logging in as a User
-1. Send a POST request to `/_login` containing the user's info.
+1. Send a `POST` request to `/_login` containing the user's info.
 2. User's info is expected as a JSON following this format:
 	* `username` : Username of user.
 	* `password` : User's password.
@@ -120,21 +119,26 @@ Server API
 ### Posting Spotposts
 1. In order to post a SpotPost you must make a `POST` request to `/spotpost/_post`.
 2. You must send a JSON file containing the data associated with the SpotPost.
-3. Please note that required parameters are marked with a *.
+3. Format the JSON using the following form.
+4. Please note that required parameters are marked with a *.
 	* \* `content`	: content of SpotPost.
 	* \* `latitude` : latitude position of SpotPost.
 	* \* `longitude`: longitude position of SpotPost.
-	* `username`	: Username of user who posted the comment. Default is the current logged in user.
-	* `reputation`	: Custom starting reputation of comment. Default is 0.
+	* `username`	: Username of user who posted the SpotPost. Default is the current logged in user.
+	* `reputation`	: Custom starting reputation of SpotPost. Default is 0.
 
-### Posting Comments
-1. In order to post a comment you must make a `POST` request to `/comment/_post`.
-2. You must send a JSON file containing the data associated with the comment.
-3. Please note that required parameters are marked with a *.
-	* \* `message_id` 	: ID of the spotpost the comment is from.
-	* \* `content`		: Content of the comment.
-	* `username`		: Username of user who posted the comment. Default is the current logged in user.
-	* `reputation`		: Custom starting reputation of comment. Default is 0.
+### Updating Spotposts
+1. In order to update you must make a `POST` request to `/spotpost/_update`.
+2. You must also send a JSON file containing the data associated with the SpotPost. 
+3. Format the JSON in the following way.
+4. The ID field is REQUIRED, however all the others are optional, but you must include one at least.
+	* `id`			: id of SpotPost. 
+	* `content`		: content of SpotPost.
+	* `latitude` 	: latitude position of SpotPost.
+	* `longitude`	: longitude position of SpotPost.
+	* `username`	: Username of user who posted the SpotPost. Default is the current logged in user.
+	* `reputation`	: Custom starting reputation of SpotPost. Default is 0.
+
 
 ### Upvoting Spotposts
 1. You must be logged in as a valid user to do this.
@@ -146,10 +150,38 @@ Server API
 1. Same procedure and rules as Upvoting.
 2. However, you must go to `/spotpost/_downvote/<id>` instead. Replace `<id>` with the ID of the Spotpost.
 
+### Posting Comments
+1. In order to post a comment you must make a `POST` request to `/comment/_post`.
+2. You must send a JSON file containing the data associated with the comment.
+3. Please note that required parameters are marked with a *.
+	* \* `message_id` 	: ID of the spotpost the comment is from.
+	* \* `content`		: Content of the comment.
+	* `username`		: Username of user who posted the comment. Default is the current logged in user.
+	* `reputation`		: Custom starting reputation of comment. Default is 0.
+
+### Upvoting Comments
+1. You must be logged in as a valid user to do this.
+2. Go to `/comment/_upvote/<id>`. Replace `<id>` with the ID of the comment you are upvoting.
+3. `<id>` must be a valid ID. Users can only vote on any given comment once.
+4. There is minimal error checking, it won't crash the server though.
+
+### Downvoting Comments
+1. Same procedure and rules as Upvoting.
+2. However, you must go to `/comment/_downvote/<id>` instead. Replace `<id>` with the ID of the comment.
+
 ### Deleting Spotposts
 1. Must be logged in as Admin to do this.
 2. Go to `/spotpost/_delete/<id>`.
 3. Replace `<id>` with the ID of the spotpost you want to delete
+
+### Following A User
+1. Go to `/_follow/<username>` where `<username>` is the username of the person being followed.
+2. This will make the current logged in user follow `<username>`.
+3. Accounts for duplicates and will prevent users from double following.
+
+### Unfollowing A User
+1. Go to `/_unfollow/<username>` where `<username>` is the username of the person being followed.
+2. This will make the current logged in user unfollow `<username>`.
 
 ### ERRORS
 Section under construction will be available once frontend gets further along.

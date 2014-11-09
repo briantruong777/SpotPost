@@ -38,7 +38,6 @@ file_handler = FileHandler("spotpost_log")
 file_handler.setLevel(logging.WARNING)
 app.logger.addHandler(file_handler)
 
-
 ###
 #
 # Calculates bounding latitude and longitude.
@@ -69,6 +68,31 @@ def calc_bounding_coords(lon, lat, radius):
 
 
 	return max_long, max_lat, min_long, min_lat
+
+###
+#
+# Allows a user to follow another user.
+# @TODO ERROR CHECKING FOR THIS. 
+#
+###
+@app.route('/_follow/<username>')
+def follow_user(username):
+	curr_user = session['username']
+	manager.insert_follow_relation(curr_user, username)
+
+	#TEMP MUST REPLACE WITH REAL REDIRECT
+	redirect(url_for('index'))
+
+###
+#
+# Allows a user to unfollow another user.
+# @TODO ERROR CHECKING FOR THIS. 
+#
+###
+@app.route('/_unfollow/<username>')
+def unfollow_user(username):
+	curr_user = session['username']
+	manager.delete_follow_relation(curr_user, username)
 
 ###
 # 
@@ -143,6 +167,34 @@ def get_spotpost():
 
 ###
 #
+#	Upvotes a given comment.
+#	
+#	@param id = id of comment.
+#
+###
+@app.route('/comment/_upvote/<id>')
+def upvote_comment(id):
+	if 'username' in session:
+		return manager.rate_comment(1, id, session['username'])
+	else:
+		return "MUST BE LOGGED IN TO UPVOTE."
+
+###
+#
+#	Downvotes a given comment.
+#	
+#	@param id = id of comment.
+#
+###
+@app.route('/comment/_downvote/<id>')
+def downvote_comment(id):
+	if 'username' in session:
+		return manager.rate_comment(-1, id, session['username'])
+	else:
+		return "MUST BE LOGGED IN TO DOWNVOTE."
+
+###
+#
 #	Upvotes a given spotpost.
 #	
 #	@param id = id of SpotPost.
@@ -174,6 +226,29 @@ def downvote_spotpost(id):
 def delete_spotpost(id):
 	if session['username'] is "Admin":
 		manager.delete_post(id)
+		return "SUCCESS"
+	else:
+		return "ERROR NOT LOGGED IN AS ADMIN"
+
+###
+#
+#	Updates a given spotpost with new values. Must be logged in as Admin.
+#
+#	JSON must be constructed following convention below (REQUIRES AT LEAST ONE TO BE ENTERED):
+#	id field is REQUIRED.
+# 
+# 	"id"				: "id of spotpost"
+#	"content"   		: "text of spotpost"
+#	"username"  		: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
+#	"latitude" 			: "latitude of spotpost"
+#	"longitude" 		: "longitude of spotpost"
+#	"reputation"   		: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING. 
+#
+###
+@app.route('/spotpost/_update, methods = ['POST']')
+def delete_spotpost():
+	if session['username'] is "Admin" and request.form['id']:
+		manager.update_post(request.form)
 		return "SUCCESS"
 	else:
 		return "ERROR NOT LOGGED IN AS ADMIN"
