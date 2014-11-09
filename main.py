@@ -71,21 +71,6 @@ def calc_bounding_coords(lon, lat, radius):
 	return max_long, max_lat, min_long, min_lat
 
 ###
-#	
-#	Initializes the Database Manager
-#
-#	SpotPosts(id, content, title, reputation, longitude, latitude, username, time)
-#	SpotPostComments(id, message_id, content, user_id, time)
-#	Users(username, password, profile_pic_id, reputation)
-#	Follows(follower_name, followee_name)
-#	Photos(id, photo)
-#	Rates(username, spotpost_id)
-#
-###
-#def initDB():
-#	manager = DBManager()
-
-###
 # 
 # Allows clientside to make a POST request to add data to the server database.
 # 
@@ -100,6 +85,21 @@ def calc_bounding_coords(lon, lat, radius):
 @app.route('/spotpost/_post', methods = ['POST'])
 def post_spotpost():
 	return manager.insert_spotpost(request.form)
+
+###
+#
+# Adds a comment to the database.
+#
+# Provided JSON must follow this format (REQUIRED DATA IS DENOTED WITH A *)
+# * "message_id"	: "id of spotpost this comment is from"
+# * "content"		: "content of comment"
+# "username"		: "username of user who posted comment, Optional will normally be current user."	NOTE: WILL BE DEPREACTED ONCE EVERYTHING IS CONFIRMED FUNCTIONING.
+# "reputation"		: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING.
+#
+###
+@app.route('/comment/_post', methods = ['POST'])
+def post_comment():
+	manager.insert_comment(request.form, session['username'])
 
 ###
 # 
@@ -139,15 +139,6 @@ def get_spotpost():
 	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, min_latitude, max_latitude, min_longitude, max_longitude, radius, location_search)
 
 	return json.dumps(data)
-
-###
-#
-#
-#
-###
-@app.route('/comment/_post', methods = ['POST'])
-def post_comment():
-	manager.insert_comment(request.form)
 
 ###
 #

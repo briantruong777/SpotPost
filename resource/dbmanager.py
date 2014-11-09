@@ -33,6 +33,8 @@ def build_comments_JSON(curr_id):
 
 		comments.append(comment_dict)
 
+	return comments
+
 ###
 #
 #	Builds dictionary to add to the JSON sent back on a get.
@@ -47,7 +49,6 @@ def build_comments_JSON(curr_id):
 #
 ###	
 def build_username_JSON(username):
-	userinfo = []
 	cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
 	rawdata = cursor.fetchall()
 
@@ -57,11 +58,7 @@ def build_username_JSON(username):
 		user_dict['profile_pic_id'] = row[2]
 		user_dict['reputation']		= row[3]
 
-		userinfo.append(user_dict)
-
-	return userinfo
-	
-	return comments
+	return user_dict
 
 ###
 #
@@ -102,7 +99,7 @@ class DBManager:
 			"reputation INTEGER DEFAULT 0, longitude REAL NOT NULL, latitude REAL NOT NULL," + 
 			" username TEXT, time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL)")
 
-		#SpotPostComments(id, message_id, content, username, time)
+		#SpotPostComments(id, message_id, content, username, reputation, time)
 		cursor.execute("CREATE TABLE IF NOT EXISTS SpotPostComments(id INTEGER PRIMARY KEY AUTOINCREMENT, message_id INTEGER, content TEXT,"
 						+ "username TEXT, reputation INTEGER DEFAULT 0, time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL)")
 		
@@ -123,13 +120,14 @@ class DBManager:
 	###
 	# 
 	# Allows clientside to make a POST request to add data to the server database.
+	# SpotPosts(id, content, title, reputation, longitude, latitude, username, time)
 	# 
-	# JSON must be constructed following convention below (ALL DATA IS REQUIRED):
-	# "content"   		: "text of spotpost"
-	# "username"  		: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
-	# "latitude" 		: "latitude of spotpost"
-	# "longitude" 		: "longitude of spotpost"
-	# "reputation"   	: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING. 
+	# JSON must be constructed following convention below (REQUIRED DATA IS DENOTED WITH A *):
+	# * "content"   		: "text of spotpost"
+	# * "username"  		: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
+	# * "latitude" 			: "latitude of spotpost"
+	# * "longitude" 		: "longitude of spotpost"
+	# "reputation"   		: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING. 
 	#
 	###
 	def insert_spotpost(self, form):
@@ -140,9 +138,22 @@ class DBManager:
 		latitude 	= form['longitude']
 		reputation 	= form['reputation']
 		
-		cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
+		if reputation:
+			cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
+		else
+			cursor.execute("INSERT INTO SpotPosts(content, title, longitude, latitude, username) VALUES (?,?,?,?)", (content, longitude, latitude, username))
+
 		connect.commit()
 
+	###
+	#
+	# Inserts a user into the Database. Encrypts the password provided using sha256_crypt. 
+	# 
+	# Provided JSON must follow this form (ALL DATA IS REQUIRED)
+	# "username"	: "username of user"
+	# "password"	: "password of user"
+	#
+	##
 	def insert_user(self, form):
 		client_username = form['username']
 		client_password = form['password']
@@ -151,7 +162,31 @@ class DBManager:
 
 		return "SUCCESS"		
 
-	def insert_comment(self):
+	#SpotPostComments(id, message_id, content, username, reputation, time)
+	###
+	#
+	# Adds a comment to the database.
+	#
+	# Provided JSON must follow this format (REQUIRED DATA IS DENOTED WITH A *)
+	# * "message_id"	: "id of spotpost this comment is from"
+	# * "content"		: "content of comment"
+	# "username"		: "username of user who posted comment, Optional will normally be current user."	NOTE: WILL BE DEPREACTED ONCE EVERYTHING IS CONFIRMED FUNCTIONING.
+	# "reputation"		: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING.
+	#
+	###
+	def insert_comment(self, form, client_username):
+		spotpost_id = form['message_id']
+		content 	= form['content']
+		reputation 	= form['reputation']
+
+		if form['username']:
+			client_username = form['username']
+
+		if reputation: 
+			cursor.execute("INSERT INTO SpotPostComments(message_id, content, username, reputation) VALUES (?,?,?,?)", (spotpost_id, content, client_username, reputation))
+		else:
+			cursor.execute("INSERT INTO SpotPostComments(message_id, content, username) VALUES (?,?,?)", (spotpost_id, content, client_username))
+
 		connect.commit()
 
 

@@ -89,7 +89,8 @@ Server API
 2. This will return a JSON file containing either all Spotposts, or Spotposts based on your search parameters.
 3. To add search parameters add `?<parameter name> = <parameter value>` to the url for the first parameter.
   for more parameters add `&<parameter name> = <parameter value>`.
-4. List of possible parameters, replace `<parameter name>` from above with this.
+4. Jquery can do this for you using `.getJSON()` if possible find an alternative using whatever JS you use.
+5. List of possible parameters, replace `<parameter name>` from above with this.
 	* `min_rating` : Minimum rating of Spotpost to search for.
 	* `max_rating` : Maximum rating of Spotpost to search for.
 	* `username`   : Author of Spotpost to search for.
@@ -98,8 +99,8 @@ Server API
 		* `latitude`  : Latitude of center point of bounding square.
 		* `longitude` : Longitude of center point of bounding square. 
 		* `radius`    : Radius of the circle that the square inscribes in meters.
-5. JSON contains an array of Spotposts based on your search parameters.
-6. Each Spotpost is constructed as follows.
+6. JSON contains an array of Spotposts based on your search parameters.
+7. Each Spotpost is constructed as follows.
 	* `id` 		  	: ID of Spotpost.
 	* `content`  	: Content of Spotpost.
 	* `rating`   	: Rating of Spotpost.
@@ -118,6 +119,14 @@ Server API
 
 ### Posting Spotposts
 
+### Posting Comments
+1. In order to post a comment you must make a `POST` request to `/comment/_post`.
+2. You must send a JSON file containing the data associated with the comment.
+3. Please note that required parameters are marked with a *.
+	* \* `message_id` 	: ID of the spotpost the comment is from.
+	* \* `content`		: Content of the comment.
+	* `username`		: Username of user who posted the comment. Default is the current logged in user.
+	* `reputation`		: Custom starting reputation of comment. Default is 0.
 
 ### Upvoting Spotposts
 1. You must be logged in as a valid user to do this.
