@@ -12,9 +12,55 @@
 '''
 import sqlite3
 import testdata
+from unidecode import unidecode
 
 connect = sqlite3.connect('data.db')
 cursor = connect.cursor()
+
+def build_comments_JSON(curr_id):
+	comments = []
+	cursor.execute("SELECT * FROM SpotPostComments WHERE message_id = ?", (curr_id,))
+	data = cursor.fetchall()
+
+	for row in data:
+		comment_dict 				= {}
+		comment_dict['id'] 		 	= row[0]
+		comment_dict['message_id']	= row[1]
+		comment_dict['content'] 	= unidecode(row[2])
+		comment_dict['username'] 	= unidecode(row[3])
+		comment_dict['time'] 		= unidecode(row[4])
+
+		comments.append(comment_dict)
+
+###
+#
+#	Builds dictionary to add to the JSON sent back on a get.
+#	Returned dictionary contains user info.
+#	
+#	@return A dictionary, see below.
+#
+#	Returned dictionary will follow this format:
+#	'username' : username of user.
+#	'profile_pic_id' : profile picture id of user.
+#	'reputation' : reputation of user.
+#
+###	
+def build_username_JSON(username):
+	userinfo = []
+	cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
+	rawdata = cursor.fetchall()
+
+	for row in rawdata:
+		user_dict = {}
+		user_dict['username'] 		= unidecode(row[0])
+		user_dict['profile_pic_id'] = row[2]
+		user_dict['reputation']		= row[3]
+
+		userinfo.append(user_dict)
+
+	return userinfo
+	
+	return comments
 
 class DBManager:
 	###
@@ -60,8 +106,100 @@ class DBManager:
 
 		testdata.add_test_data()
 
-	def insert_spotpost(self):
+	###
+	# 
+	# Allows clientside to make a POST request to add data to the server database.
+	# 
+	# JSON must be constructed following convention below (ALL DATA IS REQUIRED):
+	# "content"   		: "text of spotpost"
+	# "username"  		: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
+	# "latitude" 		: "latitude of spotpost"
+	# "longitude" 		: "longitude of spotpost"
+	# "reputation"   	: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING. 
+	#
+	###
+	def insert_spotpost(self, form):
+		content 	= form['content']
+		title 		= form['title']
+		username	= form['username']
+		longitude 	= form['latitude']
+		latitude 	= form['longitude']
+		reputation 	= form['reputation']
+		
+		cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
 		connect.commit()
 
-	def insert_spotpost(self):
+	def insert_user(self):
 		connect.commit()
+
+	def insert_rate(self):
+		connect.commit()
+
+	def insert_comment(self):
+		connect.commit()
+
+
+	def select_spotpost(self, min_reputation, max_reputation, username, post_id, min_latitude, max_latitude, min_longitude, max_longitude, radius, is_area_search):
+		query = "SELECT * FROM SpotPosts"
+		query_data = ()
+		where_query = False
+
+		if post_id:
+			query = query + " WHERE id = ?"
+			query_data = query_data + (post_id,)
+			where_query = True
+		if is_area_search:
+			if not where_query:
+				query 		= query + " WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
+				query_data 	= query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
+				where_query = True
+			else:
+				query 		= query + " AND latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
+				query_data 	= query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
+		if username:
+			if not where_query:
+				query 		= query + " WHERE username = ?"
+				query_data 	= query_data + (username,)
+				where_query = True
+			else:
+				query 		= query + " AND username = ?"
+				query_data 	= query_data + (username,)
+		if min_reputation:
+			if not where_query:
+				query 		= query + " WHERE reputation >= ?"
+				query_data 	= query_data + (min_reputation,)
+				where_query = True
+			else:
+				query 		= query + " AND reputation >= ?"
+				query_data 	= query_data + (min_reputation,)
+		if max_reputation:
+			if not where_query:
+				query 		= query + " WHERE reputation <= ?"
+				query_data 	= query_data + (max_reputation,)
+				where_query = True
+			else:
+				query_data 	= query_data + (max_reputation,)
+				query 		= query + " AND reputation <= ?"
+
+		cursor.execute(query, query_data)	
+		rawdata = cursor.fetchall()
+		data = []
+		for row in rawdata:
+		#SpotPosts(id, content, reputation, longitude, latitude, user_id, time)
+			data_dict 				= {}
+			data_dict['id'] 		= row[0]
+			data_dict['content'] 	= unidecode(row[1])
+			data_dict['title']		= unidecode(row[2])
+			data_dict['reputation'] = row[3]
+			data_dict['longitude']	= row[4]
+			data_dict['latitude'] 	= row[5]
+			data_dict['username'] 	= build_username_JSON(unidecode(row[6]))
+			data_dict['time'] 		= unidecode(row[7])
+			data_dict['comments'] 	= build_comments_JSON(row[0])
+
+			data.append(data_dict)
+
+		return data
+
+	def has_rated(self, username):
+		return True 

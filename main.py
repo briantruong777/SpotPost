@@ -12,7 +12,7 @@
 
 from flask 				import Flask, session, request, abort, render_template, redirect, url_for, escape
 from passlib.hash 		import sha256_crypt
-import resource.dbmanager
+from resource.dbmanager import DBManager
 
 #from comments 		import add_comment
 import os
@@ -27,7 +27,7 @@ except ImportError: import json
 
 connect = sqlite3.connect('data.db')
 cursor = connect.cursor()
-data_manager = DBManager()
+manager = DBManager()
 
 app = Flask(__name__)
 
@@ -37,6 +37,7 @@ from logging import FileHandler
 file_handler = FileHandler("spotpost_log")
 file_handler.setLevel(logging.WARNING)
 app.logger.addHandler(file_handler)
+
 
 ###
 #
@@ -69,54 +70,9 @@ def calc_bounding_coords(lon, lat, radius):
 
 	return max_long, max_lat, min_long, min_lat
 
-def build_comments_JSON(curr_id):
-	comments = []
-	cursor.execute("SELECT * FROM SpotPostComments WHERE message_id = ?", (curr_id,))
-	data = cursor.fetchall
-
-	for row in data:
-		comment_dict 				= {}
-		comment_dict['id'] 		 	= row[0]
-		comment_dict['message_id']	= row[1]
-		comment_dict['content'] 	= unidecode(row[2])
-		comment_dict['username'] 	= unidecode(row[3])
-		comment_dict['time'] 		= unidecode(row[4])
-
-		comments.append(comment_dict)
-
-	return comments
-
-###
-#
-#	Builds dictionary to add to the JSON sent back on a get.
-#	Returned dictionary contains user info.
-#	
-#	@return A dictionary, see below.
-#
-#	Returned dictionary will follow this format:
-#	'username' : username of user.
-#	'profile_pic_id' : profile picture id of user.
-#	'reputation' : reputation of user.
-#
-###	
-def build_username_JSON(username):
-	userinfo = []
-	cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
-	rawdata = cursor.fetchall
-
-	for row in rawdata:
-		user_dict = {}
-		user_dict['username'] 		= unidecode(row[0])
-		user_dict['profile_pic_id'] = row[2]
-		user_dict['reputation']		= row[3]
-
-		userinfo.append(user_dict)
-
-	return userinfo
-
 ###
 #	
-#	Initializes the Database by creating each table. Below are the tables in relational format.
+#	Initializes the Database Manager
 #
 #	SpotPosts(id, content, title, reputation, longitude, latitude, username, time)
 #	SpotPostComments(id, message_id, content, user_id, time)
@@ -126,27 +82,8 @@ def build_username_JSON(username):
 #	Rates(username, spotpost_id)
 #
 ###
-def initDB():
-	#SpotPosts(id, content, photo_id, reputation, longitude, latitude, visibility, user_id, time)
-	cursor.execute("CREATE TABLE IF NOT EXISTS SpotPosts(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, content TEXT, title TEXT," + 
-		"reputation INTEGER DEFAULT 0, longitude REAL NOT NULL, latitude REAL NOT NULL," + 
-		" username TEXT, time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL)")
-
-	#SpotPostComments(id, message_id, content, username, time)
-	cursor.execute("CREATE TABLE IF NOT EXISTS SpotPostComments(id INTEGER PRIMARY KEY AUTOINCREMENT, message_id INTEGER, content TEXT,"
-					+ "username TEXT, reputation INTEGER DEFAULT 0, time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL)")
-	
-	#Users(username, password, profile_pic, reputation)
-	cursor.execute("CREATE TABLE IF NOT EXISTS Users(username varchar(24) PRIMARY KEY, password TEXT, profile_pic_id INTEGER DEFAULT -1, reputation INTEGER DEFAULT 0)")
-	
-	#Follows(follower_name, followee_name)
-	cursor.execute("CREATE TABLE IF NOT EXISTS Follows(follower_name TEXT, followee_name TEXT)")
-
-	#Photos(id, photo)
-	cursor.execute("CREATE TABLE IF NOT EXISTS Photos(id INTEGER PRIMARY KEY AUTOINCREMENT, photo_url TEXT)")
-
-	#Rates(username, spotpost_id)
-	cursor.execute("CREATE TABLE IF NOT EXISTS Rates(username TEXT, spotpost_id INTEGER NOT NULL)")
+#def initDB():
+#	manager = DBManager()
 
 ###
 # 
@@ -162,16 +99,7 @@ def initDB():
 ###
 @app.route('/spotpost/_post', methods = ['POST'])
 def post_spotpost():
-	content = unidecode(request.form['content'])
-	title = unidecode(request.form['title'])
-	username = unidecode(request.form['username'])
-	longitude = float(unidecode(request.form['latitude']))
-	latitude = float(unidecode(request.form['longitude']))
-	reputation = int(request.form['reputation'])
-	cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
-	connect.commit()
-
-	return "Success"
+	return manager.insert_spotpost(request.form)
 
 ###
 # 
@@ -191,9 +119,7 @@ def post_spotpost():
 ###
 @app.route('/spotpost/_get')
 def get_spotpost():
-	query 			= "SELECT * FROM SpotPosts"
-	query_data 		= ()
-	where_query 	= False
+	location_search = False
 	min_reputation 	= request.args.get('min_reputation')
 	max_reputation 	= request.args.get('max_reputation')
 	username 		= request.args.get('username')
@@ -201,62 +127,16 @@ def get_spotpost():
 	latitude 		= request.args.get('latitude')
 	longitude 		= request.args.get('longitude')
 	radius 			= request.args.get('radius')
+	max_longitude	= None
+	min_longitude	= None
+	max_latitude 	= None
+	min_latitude 	= None
 
-	if post_id:
-		query = query + "WHERE id = ?"
-		query_data = query_data + (post_id,)
-		where_query = True
 	if longitude and latitude and radius:
 		max_longitude, max_latitude, min_longitude, min_latitude = calc_bounding_coords(longitude, latitude, radius)
-		if not where_query:
-			query 		= query + " WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
-			query_data 	= query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
-			where_query = True
-		else:
-			query 		= query + " AND latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
-			query_data 	= query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
-	if username:
-		if not where_query:
-			query 		= query + " WHERE username = ?"
-			query_data 	= query_data + (username,)
-			where_query = True
-		else:
-			query 		= query + " AND username = ?"
-			query_data 	= query_data + (username,)
-	if min_reputation:
-		if not where_query:
-			query 		= query + " WHERE reputation >= ?"
-			query_data 	= query_data + (min_reputation,)
-			where_query = True
-		else:
-			query 		= query + " AND reputation >= ?"
-			query_data 	= query_data + (min_reputation,)
-	if max_reputation:
-		if not where_query:
-			query 		= query + " WHERE reputation <= ?"
-			query_data 	= query_data + (max_reputation,)
-			where_query = True
-		else:
-			query_data 	= query_data + (max_reputation,)
-			query 		= query + " AND reputation <= ?"
+		location_search = True
 
-	cursor.execute(query, query_data)	
-	rawdata = cursor.fetchall()
-	data = []
-	for row in rawdata:
-	#SpotPosts(id, content, reputation, longitude, latitude, user_id, time)
-		data_dict 				= {}
-		data_dict['id'] 		= row[0]
-		data_dict['content'] 	= unidecode(row[1])
-		data_dict['title']		= unidecode(row[2])
-		data_dict['reputation'] = row[3]
-		data_dict['longitude']	= row[4]
-		data_dict['latitude'] 	= row[5]
-		data_dict['username'] 	= build_username_JSON(unidecode(row[6]))
-		data_dict['time'] 		= unidecode(row[7])
-		data_dict['comments'] 	= build_comments_JSON(row[0])
-
-		data.append(data_dict)
+	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, min_latitude, max_latitude, min_longitude, max_longitude, radius, location_search)
 
 	return json.dumps(data)
 
@@ -267,16 +147,7 @@ def get_spotpost():
 ###
 @app.route('/comment/_post', methods = ['POST'])
 def post_comment():
-	content = unidecode(request.form['content'])
-	title = unidecode(request.form['title'])
-	username = unidecode(request.form['username'])
-	longitude = float(unidecode(request.form['latitude']))
-	latitude = float(unidecode(request.form['longitude']))
-	reputation = int(request.form['reputation'])
-	cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
-	connect.commit()
-
-	return "Success"
+	manager.insert_comment(request.form)
 
 ###
 #
@@ -435,8 +306,6 @@ def index():
 	#return 'You are not logged in'
 	session['username'] = "Admin"
 	return render_template('index.html')
-
-initDB()
 
 if __name__ == '__main__':
 	# Runs on port 5000 by default
