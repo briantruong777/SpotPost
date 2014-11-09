@@ -12,6 +12,7 @@
 '''
 import sqlite3
 import testdata
+from passlib.hash import sha256_crypt
 from unidecode import unidecode
 
 connect = sqlite3.connect('data.db')
@@ -61,6 +62,19 @@ def build_username_JSON(username):
 	return userinfo
 	
 	return comments
+
+###
+#
+#	Securely stores the password in the database
+#
+#	@param username = username of user.
+#	@param password = password of user.
+#
+###
+def store_hash_pass(username, password):
+	pass_hash = sha256_crypt.encrypt(password)
+	cursor.execute("INSERT INTO Users(username, password) VALUES(?, ?)", (username, pass_hash))
+	connect.commit()
 
 class DBManager:
 	###
@@ -129,11 +143,20 @@ class DBManager:
 		cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
 		connect.commit()
 
-	def insert_user(self):
-		connect.commit()
+	def insert_user(self, form):
+		client_username = form['username']
+		client_password = form['password']
 
-	def insert_rate(self):
-		connect.commit()
+		store_hash_pass(client_username, client_password)
+
+		#@TODO REPLACE WITH REGISTRATION FORM
+		return '''
+	        <form action="" method="post">
+	            <p><input type=text name=username>
+	            <p><input type=text name=password>
+	            <p><input type=submit value=Login>
+	        </form>
+	    '''
 
 	def insert_comment(self):
 		connect.commit()
@@ -201,5 +224,37 @@ class DBManager:
 
 		return data
 
-	def has_rated(self, username):
-		return True 
+	###
+	#
+	#	Helper function for rating. Changes reputation of SpotPost by change_in_reputation
+	#
+	#	@param change_in_reputation = number to be added to reputation.
+	#	@param id = id of SpotPost.
+	#
+	###
+	def rate_post(self, change_in_reputation, id, username):
+		cursor.execute("SELECT * FROM Rates WHERE username = ? AND spotpost_id = ?", (username, id))
+		curr_user_data = cursor.fetchone()
+
+		cursor.execute("SELECT * FROM SpotPosts WHERE id = ?", (id,))
+		spotpost_data = cursor.fetchone()
+		spotpost_creator = spotpost_data[6]
+
+		if not curr_user_data and spotpost_data:		#If the user HASN'T upvoted, and the SpotPost exists.
+			cursor.execute("UPDATE SpotPosts SET reputation = reputation + ? WHERE id = ?", (change_in_reputation, id))					# Increase rep of SpotPost
+			cursor.execute("INSERT INTO Rates (username, spotpost_id) VALUES (?, ?)", (username, id))	# Insert relation into Rates
+			cursor.execute("UPDATE Users SET reputation = reputation + ? WHERE username = ?", (change_in_reputation, spotpost_creator))	# Increase rep of Creator
+			connect.commit()
+			return "SUCCESS"
+		else:
+			return "ERROR USER ALREADY VOTED OR SPOTPOST DOESN'T EXIST"
+
+	###
+	#
+	#	Deletes a spotpost with id provided.
+	#
+	#	@param id = id of spotpost to delete.
+	#
+	###
+	def delete_post(self, id):
+		cursor.execute("DELETE FROM SpotPosts WHERE id = ?", (id,))

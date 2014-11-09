@@ -158,8 +158,7 @@ def post_comment():
 ###
 @app.route('/spotpost/_upvote/<id>')
 def upvote_spotpost(id):
-	session['username'] = "Admin"
-	return rate_post(1, id)
+	return manager.rate_post(1, id, session['username'])
 
 ###
 #
@@ -170,36 +169,8 @@ def upvote_spotpost(id):
 ###
 @app.route('/spotpost/_downvote/<id>')
 def downvote_spotpost(id):
-	session['username'] = "Admin"
-	return rate_post(-1, id)
+	return manager.rate_post(-1, id, session['username'])
 
-###
-#
-#	Helper function for rating. Changes reputation of SpotPost by change_in_reputation
-#
-#	@param change_in_reputation = number to be added to reputation.
-#	@param id = id of SpotPost.
-#
-###
-def rate_post(change_in_reputation, id):
-	if 'username' in session:
-		cursor.execute("SELECT * FROM Rates WHERE username = ? AND spotpost_id = ?", (session['username'], id))
-		curr_user_data = cursor.fetchone()
-
-		cursor.execute("SELECT * FROM SpotPosts WHERE id = ?", (id,))
-		spotpost_data = cursor.fetchone()
-		spotpost_creator = spotpost_data[6]
-
-		if not curr_user_data and spotpost_data:		#If the user HASN'T upvoted, and the SpotPost exists.
-			cursor.execute("UPDATE SpotPosts SET reputation = reputation + ? WHERE id = ?", (change_in_reputation, id))					# Increase rep of SpotPost
-			cursor.execute("INSERT INTO Rates (username, spotpost_id) VALUES (?, ?)", (session['username'], id))	# Insert relation into Rates
-			cursor.execute("UPDATE Users SET reputation = reputation + ? WHERE username = ?", (change_in_reputation, spotpost_creator))	# Increase rep of Creator
-			connect.commit()
-			return "SUCCESS"
-		else:
-			return "ERROR USER ALREADY VOTED OR SPOTPOST DOESN'T EXIST"
-	else:
-		return "ERROR USER NOT LOGGED IN"
 ###
 #
 #	Deletes a given spotpost. Must be logged in as Admin
@@ -210,7 +181,7 @@ def rate_post(change_in_reputation, id):
 @app.route('/spotpost/_delete/<id>')
 def delete_spotpost(id):
 	if session['username'] is "Admin":
-		cursor.execute("DELETE FROM SpotPosts WHERE id = ?", (id,))
+		manager.delete_post(id)
 		return "SUCCESS"
 	else:
 		return "ERROR NOT LOGGED IN AS ADMIN"
@@ -261,38 +232,13 @@ def logout():
 
 ###
 #
-#	Securely stores the password in the database
-#
-#	@param username = username of user.
-#	@param password = password of user.
-#
-###
-def store_hash_pass(username, password):
-	pass_hash = sha256_crypt.encrypt(password)
-	cursor.execute("INSERT INTO Users(username, password) VALUES(?, ?)", (username, pass_hash))
-	connect.commit()
-
-###
-#
 #	Registers the user into the Database.
 #
 ###
 @app.route('/_register', methods =['GET', 'POST'])
 def register():
 	if request.method == 'POST':
-		client_username = request.form['username']
-		client_password = request.form['password']
-
-		store_hash_pass(client_username, client_password)
-
-	#@TODO REPLACE WITH REGISTRATION FORM
-	return '''
-        <form action="" method="post">
-            <p><input type=text name=username>
-            <p><input type=text name=password>
-            <p><input type=submit value=Login>
-        </form>
-    '''
+		return manager.insert_user(request.form)
 
 ###
 #
