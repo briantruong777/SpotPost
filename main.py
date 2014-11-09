@@ -71,6 +71,20 @@ def calc_bounding_coords(lon, lat, radius):
 
 ###
 #
+# Returns a JSON containing an array of users who are following 
+# the user with username.
+#
+# @param username = username of followee
+#
+###
+@app.route('/followerlist/<username>')
+def get_follower_list(username):
+	data = manager.get_list_of_followers(username)
+	
+	return json.dumps(data)
+
+###
+#
 # Allows a user to follow another user.
 # @TODO ERROR CHECKING FOR THIS. 
 #

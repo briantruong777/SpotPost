@@ -88,6 +88,7 @@ class DBManager:
 	#
 	###
 	def __init__(self):
+		#Drop all the tables in the Database so that we can make a clean new one.
 		cursor.execute("DROP TABLE IF EXISTS SpotPosts")
 		cursor.execute("DROP TABLE IF EXISTS SpotPostComments")
 		cursor.execute("DROP TABLE IF EXISTS Users")
@@ -230,6 +231,42 @@ class DBManager:
 		connect.commit()
 
 
+	###
+	#
+	# Returns a JSON containing an array of users who are following 
+	# the user with username. 
+	#
+	# @TODO CURRENTLY ONLY RETURNS LIST OF USERNAMES MODIFY TO RETURN LIST OF USER ARRAYS.
+	#
+	# @param username = username of followee
+	#
+	###
+	def get_list_of_followers(username):
+		cursor.execute("SELECT * FROM Follows WHERE followee_name = ?", (username,))
+		rawdata = cursor.fetchall()
+		data = []
+
+		for row in rawdata:
+			data.append(rawdata[0])
+
+		return data
+
+	###
+	#  
+	# Allows clientside to make a GET request to get spotposts from the server database.
+	# 
+	# NOTE: TO ADD MORE ARGUMENTS THE CONVENTION ?min_reputation=10&max_reputation=100 MUST BE FOLLOWED.
+	# NOTE: TO FURTHER THE POINT ABOVE I HAVE WRITTEN ?/& TO SHOW THAT ITS ONE OR THE OTHER DEPENDING ON PREVIOUS DATA.
+	#
+	# URL must be constructed following convention below (NOT ALL DATA IS REQUIRED):
+	# URL?min_reputation 	= minimum reputation to search for. 
+	# URL?/&max_reputation 	= maximum reputation to search for. 	
+	# URL?/&id 		 	= desired spotpost ID.
+	# URL?/&latitude 	= latitude of center point of bounding square. 		NOTE: ALL 3 VARIABLES MUST BE PROVIDED TO USE BOUNDING SQUARE. OTHERWISE SEARCH IGNORES IT.
+	# URL&longitude   	= longitude of center point of bounding square.
+	# URL&radius        = "radius" of bounding square.
+	#
+	###
 	def select_spotpost(self, min_reputation, max_reputation, username, post_id, min_latitude, max_latitude, min_longitude, max_longitude, radius, is_area_search):
 		query = "SELECT * FROM SpotPosts"
 		query_data = ()
