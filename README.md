@@ -52,7 +52,7 @@ Notes for Deployment Server
   writable). Also the directory the database is in needs to be group writable
 
 Server API
---------
+========
 
 ### Generating Test Data
 1. Simple run `python testdata.py`
@@ -118,6 +118,14 @@ Server API
 	* `time`		: Date and Time Spotpost was posted. 
 
 ### Posting Spotposts
+1. In order to post a SpotPost you must make a `POST` request to `/spotpost/_post`.
+2. You must send a JSON file containing the data associated with the SpotPost.
+3. Please note that required parameters are marked with a *.
+	* \* `content`	: content of SpotPost.
+	* \* `latitude` : latitude position of SpotPost.
+	* \* `longitude`: longitude position of SpotPost.
+	* `username`	: Username of user who posted the comment. Default is the current logged in user.
+	* `reputation`	: Custom starting reputation of comment. Default is 0.
 
 ### Posting Comments
 1. In order to post a comment you must make a `POST` request to `/comment/_post`.

@@ -73,18 +73,19 @@ def calc_bounding_coords(lon, lat, radius):
 ###
 # 
 # Allows clientside to make a POST request to add data to the server database.
+# SpotPosts(id, content, title, reputation, longitude, latitude, username, time)
 # 
-# JSON must be constructed following convention below (ALL DATA IS REQUIRED):
-# "content"   		: "text of spotpost"
-# "username"  		: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
-# "latitude" 		: "latitude of spotpost"
-# "longitude" 		: "longitude of spotpost"
-# "reputation"   	: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING. 
+# JSON must be constructed following convention below (REQUIRED DATA IS DENOTED WITH A *):
+# * "content"   		: "text of spotpost"
+# "username"  			: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
+# * "latitude" 			: "latitude of spotpost"
+# * "longitude" 		: "longitude of spotpost"
+# "reputation"   		: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING. 
 #
 ###
 @app.route('/spotpost/_post', methods = ['POST'])
 def post_spotpost():
-	return manager.insert_spotpost(request.form)
+	return manager.insert_spotpost(request.form, session['username'])
 
 ###
 #

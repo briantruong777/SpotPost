@@ -124,24 +124,26 @@ class DBManager:
 	# 
 	# JSON must be constructed following convention below (REQUIRED DATA IS DENOTED WITH A *):
 	# * "content"   		: "text of spotpost"
-	# * "username"  		: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
+	# "username"  			: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
 	# * "latitude" 			: "latitude of spotpost"
 	# * "longitude" 		: "longitude of spotpost"
 	# "reputation"   		: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING. 
 	#
 	###
-	def insert_spotpost(self, form):
+	def insert_spotpost(self, form, client_username):
 		content 	= form['content']
 		title 		= form['title']
-		username	= form['username']
 		longitude 	= form['latitude']
 		latitude 	= form['longitude']
 		reputation 	= form['reputation']
 		
+		if form['username']:
+			client_username = form['username']
+
 		if reputation:
-			cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, username))
+			cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, client_username))
 		else
-			cursor.execute("INSERT INTO SpotPosts(content, title, longitude, latitude, username) VALUES (?,?,?,?)", (content, longitude, latitude, username))
+			cursor.execute("INSERT INTO SpotPosts(content, title, longitude, latitude, username) VALUES (?,?,?,?)", (content, longitude, latitude, client_username))
 
 		connect.commit()
 
