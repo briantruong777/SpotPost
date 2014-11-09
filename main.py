@@ -245,8 +245,8 @@ def delete_spotpost(id):
 #	"reputation"   		: "custom starting reputation" 				NOTE: WILL BE DEPRECEATED IN FUTURE VERSIONING. 
 #
 ###
-@app.route('/spotpost/_update, methods = ['POST']')
-def delete_spotpost():
+@app.route('/spotpost/_update', methods = ['POST'])
+def update_spotpost():
 	if session['username'] is "Admin" and request.form['id']:
 		manager.update_post(request.form)
 		return "SUCCESS"

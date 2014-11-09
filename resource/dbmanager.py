@@ -152,7 +152,7 @@ class DBManager:
 		if data:
 			cursor.execute("DELETE FROM Follows WHERE follower_name = ? AND followee_name = ?", (follower_name, followee_name))
 			connect.commit()
-		else
+		else:
 			return "ERROR"
 
 	###
@@ -446,4 +446,14 @@ class DBManager:
 	def delete_post(self, id):
 		cursor.execute("DELETE FROM SpotPosts WHERE id = ?", (id,))
 		connect.commit()
-			
+
+	###
+	#
+	#	Deletes a comment with id provided.
+	#
+	#	@param id = id of comment to delete.
+	#
+	###
+	def delete_comment(self, id):
+		cursor.execute("DELETE FROM SpotPostComments WHERE id = ?", (id,))
+		connect.commit()
