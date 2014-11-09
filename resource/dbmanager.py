@@ -149,14 +149,7 @@ class DBManager:
 
 		store_hash_pass(client_username, client_password)
 
-		#@TODO REPLACE WITH REGISTRATION FORM
-		return '''
-	        <form action="" method="post">
-	            <p><input type=text name=username>
-	            <p><input type=text name=password>
-	            <p><input type=submit value=Login>
-	        </form>
-	    '''
+		return "SUCCESS"		
 
 	def insert_comment(self):
 		connect.commit()
@@ -223,6 +216,20 @@ class DBManager:
 			data.append(data_dict)
 
 		return data
+
+	def validate_user(self, username, password):
+		cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
+		data = cursor.fetchone()
+
+		if data:
+			db_hash = data[1]
+			if(sha256_crypt.verify(client_password, db_hash)):
+				return True
+			else:
+				return False
+		else:
+			return False
+
 
 	###
 	#

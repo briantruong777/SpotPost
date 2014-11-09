@@ -195,23 +195,39 @@ def delete_spotpost(id):
 def login():
 	if request.method == 'POST' and 'username' in request.form.keys():
 		client_password = request.form['password']
+		client_username = request.form['username']
 
-		cursor.execute("SELECT * FROM Users WHERE username = ?", (client_username,))
-		data = cursor.fetchone()
-
-		if data:
-			db_hash = data[1]
-			if(sha256_crypt.verify(client_password, db_hash)):
-				session['username'] = request.form['username']
-				return redirect(url_for('index'))
-			else:
-				return "INVALID PASSWORD"
+		valid_login = manager.validate_user(client_username, client_password)
+		
+		if valid_login:
+			session['username'] = client_username
+			redirect(url_for('index'))
 		else:
-			return "INVALID USERNAME"
-	else:
-		return "ERROR"
+			return "INVALID LOGIN DETAILS"
+	elif request.method == 'POST':
+		return "ERROR INVALID FORMAT"
 	
 	#@TODO REPLACE WITH LOGIN FORM
+	return '''
+        <form action="" method="post">
+            <p><input type=text name=username>
+            <p><input type=text name=password>
+            <p><input type=submit value=Login>
+        </form>
+    '''
+
+###
+#
+#	Registers the user into the Database.
+#
+###
+@app.route('/_register', methods =['GET', 'POST'])
+def register():
+	if request.method == 'POST':
+		manager.insert_user(request.form)
+		session['username'] = request.form['username']
+		redirect(url_for('index'))
+
 	return '''
         <form action="" method="post">
             <p><input type=text name=username>
@@ -229,16 +245,6 @@ def login():
 def logout():
 	session.pop('username', None)
 	return "LOGGED OUT."
-
-###
-#
-#	Registers the user into the Database.
-#
-###
-@app.route('/_register', methods =['GET', 'POST'])
-def register():
-	if request.method == 'POST':
-		return manager.insert_user(request.form)
 
 ###
 #
