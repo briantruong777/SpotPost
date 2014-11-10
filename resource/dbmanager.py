@@ -72,6 +72,7 @@ def build_username_JSON(username):
 def store_hash_pass(username, password):
 	pass_hash = sha256_crypt.encrypt(password)
 	cursor.execute("INSERT INTO Users(username, password) VALUES(?, ?)", (username, pass_hash))
+		
 	connect.commit()
 
 class DBManager:
@@ -106,7 +107,9 @@ class DBManager:
 						+ "username TEXT, reputation INTEGER DEFAULT 0, time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL)")
 		
 		#Users(username, password, profile_pic, reputation)
-		cursor.execute("CREATE TABLE IF NOT EXISTS Users(username varchar(24) PRIMARY KEY, password TEXT, profile_pic_id INTEGER DEFAULT -1, reputation INTEGER DEFAULT 0)")
+		#Privilege: 0 = USER, 1 = ADMIN
+		cursor.execute("CREATE TABLE IF NOT EXISTS Users(username varchar(24) PRIMARY KEY, password TEXT, profile_pic_id INTEGER DEFAULT -1,"
+		 				+ " reputation INTEGER DEFAULT 0, privilege INTEGER DEFAULT 0)")
 		
 		#Follows(follower_name, followee_name)
 		cursor.execute("CREATE TABLE IF NOT EXISTS Follows(follower_name TEXT, followee_name TEXT)")
@@ -195,11 +198,8 @@ class DBManager:
 	# "password"	: "password of user"
 	#
 	##
-	def insert_user(self, form):
-		client_username = form['username']
-		client_password = form['password']
-
-		store_hash_pass(client_username, client_password)
+	def insert_user(self, username, password):
+		store_hash_pass(username, password)
 
 		return "SUCCESS"		
 
@@ -327,6 +327,22 @@ class DBManager:
 			data.append(data_dict)
 
 		return data
+
+	###
+	#
+	# Gets the privileges of the user.
+	# @return 0 if regular user, 1 if admin.
+	#
+	###
+	def get_privilege(self, username):
+		cursor.execute("SELECT privilege FROM Users WHERE username = ?", (username,))
+		privilege = cursor.fetchone()
+
+		return privilege[0]
+
+	def update_privilege(self, username, newpriv):
+		cursor.execute("UPDATE Users SET privilege = ? WHERE username = ?", (newpriv, username))
+		
 
 	###
 	#

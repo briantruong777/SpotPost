@@ -13,6 +13,8 @@
 from flask 				import Flask, session, request, abort, render_template, redirect, url_for, escape
 from passlib.hash 		import sha256_crypt
 from resource.dbmanager import DBManager
+from Crypto.PublicKey import RSA
+from Crypto import Random
 
 #from comments 		import add_comment
 import os
@@ -25,9 +27,11 @@ from unidecode import unidecode
 try: import simplejson as json
 except ImportError: import json
 
-connect = sqlite3.connect('data.db')
-cursor = connect.cursor()
 manager = DBManager()
+
+# RSA Encryption Key.
+random_generator = Random.new().read
+key = RSA.generate(1024, random_generator)
 
 app = Flask(__name__)
 
@@ -68,6 +72,19 @@ def calc_bounding_coords(lon, lat, radius):
 
 
 	return max_long, max_lat, min_long, min_lat
+
+###
+#
+# Gets the public key required for encryption.
+#
+# Data is sent as a JSON with {"key" : public key}
+#
+###
+@app.route('/_publickey')
+def get_public_key():
+	pub_keydict = {"key" : key.publickey()}
+
+	return json.dumps(pub_keydict)
 
 ###
 #
@@ -279,10 +296,11 @@ def update_spotpost():
 @app.route('/_login', methods =['GET', 'POST'])
 def login():
 	if request.method == 'POST' and 'username' in request.form.keys():
-		client_password = request.form['password']
-		client_username = request.form['username']
+		enc_password = request.form['password']
+		username = request.form['username']
+		password = key.decrypt(enc_pass)
 
-		valid_login = manager.validate_user(client_username, client_password)
+		valid_login = manager.validate_user(username, password)
 		
 		if valid_login:
 			session['username'] = client_username
@@ -309,7 +327,10 @@ def login():
 @app.route('/_register', methods =['GET', 'POST'])
 def register():
 	if request.method == 'POST':
-		manager.insert_user(request.form)
+		enc_pass = request.form['password']
+		passsword = key.decrypt(enc_pass)
+
+		manager.insert_user(request.form['username'], password)
 		session['username'] = request.form['username']
 		redirect(url_for('index'))
 
@@ -321,6 +342,22 @@ def register():
         </form>
     '''
 
+###
+#
+# Promotes a user to an admin.
+# @param username = user to be promoted.
+#
+###
+@app.route('/promote/<username>')
+def promote_user(username):
+	curr_user = session['username']
+	if curr_user:
+		privilege = manager.get_privilege(curr_user)
+		if privilege:
+			manager.set_privilege(username, 1)
+
+	else:
+		return "ERROR: Must be logged in."
 ###
 #
 #	Logs the user out.
@@ -348,6 +385,7 @@ if __name__ == '__main__':
 	# Runs on port 5000 by default
 	# url: "localhost:5000"
 	# Secret Key for sessions.
+
 	app.secret_key = 'Bv`L>?h^`qeQr6f7c$DK.E-gvMXZR+'
 	app.run(host="0.0.0.0")
 	connect.close()
