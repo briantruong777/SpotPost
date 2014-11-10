@@ -13,12 +13,25 @@
 '''
 import sqlite3
 import testdata
-from passlib.hash import sha256_crypt
-from unidecode import unidecode
+from passlib.hash 	import sha256_crypt
+from unidecode 		import unidecode
 
 connect = sqlite3.connect('data.db')
 cursor = connect.cursor()
 
+###
+#
+# Builds the JSON data for comments to be transmitted to the client
+# along with spotpost information. Comments are an array of dictionaries.
+# JSON is built as follows
+#--------------------------
+# 'id' 			: id of comment.
+# 'message_id' 	: id of spotpost linked to comment.
+# 'content'		: content of comment.
+# 'username' 	: username of creator.
+# 'time' 		: date and time comment was posted.
+#
+###
 def build_comments_JSON(curr_id):
 	comments = []
 	cursor.execute("SELECT * FROM SpotPostComments WHERE message_id = ?", (curr_id,))
@@ -78,6 +91,13 @@ def store_hash_pass(username, password):
 
 class DBManager:
 	###
+	#
+	# Closes the connection, used when closing the server.
+	#
+	###
+	def close_connection(self):
+		connect.close()
+	###
 	#	
 	#	Initializes the Database by creating each table. Below are the tables in relational format.
 	#
@@ -135,8 +155,13 @@ class DBManager:
 	#
 	###
 	def insert_unlock_relation(self, username, id):
-		cursor.execute("INSERT INTO Unlocks(username, spotpost_id) VALUES (?,?)", (username, id))
-		connect.commit()
+		cursor.execute("SELECT * FROM Unlocks WHERE username = ? AND spotpost_id = ?", (username, id))
+		exists = cursor.fetchone()
+		if exists:
+			cursor.execute("INSERT INTO Unlocks(username, spotpost_id) VALUES (?,?)", (username, id))
+			connect.commit()
+		else:
+			return "ERROR RELATION ALREADY EXISTS"
 
 	###
 	#
@@ -280,12 +305,20 @@ class DBManager:
 	# URL?/&latitude 	= latitude of center point of bounding square. 		NOTE: ALL 3 VARIABLES MUST BE PROVIDED TO USE BOUNDING SQUARE. OTHERWISE SEARCH IGNORES IT.
 	# URL&longitude   	= longitude of center point of bounding square.
 	# URL&radius        = "radius" of bounding square.
+	# URL?/&lock_value  = Lock status of spotposts. (0 = All posts locked or unlocked, 1 = All locked posts, 2 = All unlocked posts).
 	#
 	###
-	def select_spotpost(self, min_reputation, max_reputation, username, post_id, min_latitude, max_latitude, min_longitude, max_longitude, radius, is_area_search):
+	def select_spotpost(self, min_reputation, max_reputation, username, post_id, min_latitude, 
+						max_latitude, min_longitude, max_longitude, radius, is_area_search, lock_value):
 		query = "SELECT * FROM SpotPosts"
 		query_data = ()
 		where_query = False
+
+		if lock_value:
+			if lock_value == 1:
+				query = query + " INNER JOIN Unlocks ON SpotPosts.id <> Unlocks.spotpost_id "
+			else:
+				query = query + " INNER JOIN Unlocks ON SpotPosts.id = Unlocks.spotpost_id "
 
 		if post_id:
 			query = query + " WHERE id = ?"
@@ -369,7 +402,7 @@ class DBManager:
 		cursor.execute("SELECT privilege FROM Users WHERE username = ?", (username,))
 		privilege = cursor.fetchone()
 
-		return privilege[0]
+		return int(privilege[0])
 
 	###
 	#

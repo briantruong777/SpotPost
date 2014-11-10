@@ -175,6 +175,7 @@ def post_comment():
 # URL?/&latitude 	= latitude of center point of bounding square. 		NOTE: ALL 3 VARIABLES MUST BE PROVIDED TO USE BOUNDING SQUARE. OTHERWISE SEARCH IGNORES IT.
 # URL&longitude   	= longitude of center point of bounding square.
 # URL&radius        = "radius" of bounding square.
+# URL?/&lock_value  = Lock status of spotposts. (0 = All posts locked or unlocked, 1 = All locked posts, 2 = All unlocked posts).
 #
 ###
 @app.route('/spotpost/_get')
@@ -187,6 +188,7 @@ def get_spotpost():
 	latitude 		= request.args.get('latitude')
 	longitude 		= request.args.get('longitude')
 	radius 			= request.args.get('radius')
+	lock_value		= request.args.get('lock_value')
 	max_longitude	= None
 	min_longitude	= None
 	max_latitude 	= None
@@ -196,7 +198,7 @@ def get_spotpost():
 		max_longitude, max_latitude, min_longitude, min_latitude = calc_bounding_coords(longitude, latitude, radius)
 		location_search = True
 
-	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, min_latitude, max_latitude, min_longitude, max_longitude, radius, location_search)
+	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, min_latitude, max_latitude, min_longitude, max_longitude, radius, location_search, lock_value)
 
 	return json.dumps(data)
 
@@ -259,7 +261,7 @@ def downvote_spotpost(id):
 ###
 @app.route('/spotpost/_delete/<id>')
 def delete_spotpost(id):
-	if session['username'] is "Admin":
+	if session['privilege']:
 		manager.delete_post(id)
 		return "SUCCESS"
 	else:
@@ -282,7 +284,7 @@ def delete_spotpost(id):
 ###
 @app.route('/spotpost/_update', methods = ['POST'])
 def update_spotpost():
-	if session['username'] is "Admin" and request.form['id']:
+	if session['privilege'] and request.form['id']:
 		manager.update_post(request.form)
 		return "SUCCESS"
 	else:
@@ -303,7 +305,8 @@ def login():
 		valid_login = manager.validate_user(username, password)
 		
 		if valid_login:
-			session['username'] = client_username
+			session['username'] = username
+			session['privilege'] = manager.get_privilege(curr_user)
 			redirect(url_for('index'))
 		else:
 			return "INVALID LOGIN DETAILS"
@@ -331,6 +334,7 @@ def register():
 		passsword = key.decrypt(enc_pass)
 
 		manager.insert_user(request.form['username'], password)
+		session['privilege'] = manager.get_privilege(curr_user)
 		session['username'] = request.form['username']
 		redirect(url_for('index'))
 
@@ -355,7 +359,6 @@ def promote_user(username):
 		privilege = manager.get_privilege(curr_user)
 		if privilege:
 			manager.set_privilege(username, 1)
-
 	else:
 		return "ERROR: Must be logged in."
 ###
@@ -388,4 +391,4 @@ if __name__ == '__main__':
 
 	app.secret_key = 'Bv`L>?h^`qeQr6f7c$DK.E-gvMXZR+'
 	app.run(host="0.0.0.0")
-	connect.close()
+	manager.close_connection()
