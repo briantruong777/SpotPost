@@ -99,6 +99,10 @@ Server API
 	* `max_rating` : Maximum rating of Spotpost to search for.
 	* `username`   : Author of Spotpost to search for.
 	* `id`  	   : ID of Spotpost. This overrides the other search parameters.
+	* `lock_value` : Lock value of your search.
+		* A `lock_value` of 0 gets you all SpotPosts. Therefore this is the default value.
+		* A `lock_value` of 1 gets you all LOCKED SpotPosts.
+		* A `lock_value` of 2 gets you all UNLOCKED SpotPosts.
 	* Location Based parameters. All three must be included, search ignores proper subsets.
 		* `latitude`  : Latitude of center point of bounding square.
 		* `longitude` : Longitude of center point of bounding square. 
