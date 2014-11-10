@@ -184,5 +184,10 @@ Server API
 1. Go to `/_unfollow/<username>` where `<username>` is the username of the person being followed.
 2. This will make the current logged in user unfollow `<username>`.
 
+### Getting A List of Followers
+1. Go to `/followerlist/<username>` where `<username>` is the username of the person being followed.
+2. This will return a JSON file containing an array of usernames.
+3. In the future it will return an array of user arrays like `get_spotpost` does currently.
+
 ### ERRORS
 Section under construction will be available once frontend gets further along.

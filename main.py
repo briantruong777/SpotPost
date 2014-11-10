@@ -72,7 +72,9 @@ def calc_bounding_coords(lon, lat, radius):
 ###
 #
 # Returns a JSON containing an array of users who are following 
-# the user with username.
+# the user with username. 
+#
+# @TODO CURRENTLY ONLY RETURNS LIST OF USERNAMES MODIFY TO RETURN LIST OF USER ARRAYS.
 #
 # @param username = username of followee
 #
@@ -80,7 +82,7 @@ def calc_bounding_coords(lon, lat, radius):
 @app.route('/followerlist/<username>')
 def get_follower_list(username):
 	data = manager.get_list_of_followers(username)
-	
+
 	return json.dumps(data)
 
 ###
@@ -95,7 +97,7 @@ def follow_user(username):
 	manager.insert_follow_relation(curr_user, username)
 
 	#TEMP MUST REPLACE WITH REAL REDIRECT
-	redirect(url_for('index'))
+	return redirect(url_for('index'))
 
 ###
 #
@@ -108,6 +110,8 @@ def unfollow_user(username):
 	curr_user = session['username']
 	manager.delete_follow_relation(curr_user, username)
 
+	return redirect(url_for('index'))
+	
 ###
 # 
 # Allows clientside to make a POST request to add data to the server database.
@@ -325,7 +329,7 @@ def register():
 @app.route('/_logout')
 def logout():
 	session.pop('username', None)
-	return "LOGGED OUT."
+	return redirect(url_for('index'))
 
 ###
 #

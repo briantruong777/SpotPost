@@ -203,7 +203,6 @@ class DBManager:
 
 		return "SUCCESS"		
 
-	#SpotPostComments(id, message_id, content, username, reputation, time)
 	###
 	#
 	# Adds a comment to the database.
