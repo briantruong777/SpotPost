@@ -52,9 +52,9 @@ def build_comments_JSON(curr_id):
 def build_username_JSON(username):
 	cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
 	rawdata = cursor.fetchall()
-
+	user_dict = {}
+		
 	for row in rawdata:
-		user_dict = {}
 		user_dict['username'] 		= unidecode(row[0])
 		user_dict['profile_pic_id'] = row[2]
 		user_dict['reputation']		= row[3]

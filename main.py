@@ -111,7 +111,7 @@ def unfollow_user(username):
 	manager.delete_follow_relation(curr_user, username)
 
 	return redirect(url_for('index'))
-	
+
 ###
 # 
 # Allows clientside to make a POST request to add data to the server database.
