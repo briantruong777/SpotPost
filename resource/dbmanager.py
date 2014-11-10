@@ -86,6 +86,7 @@ class DBManager:
 	#	Follows(follower_name, followee_name)
 	#	Photos(id, photo)
 	#	Rates(username, spotpost_id)
+	#	Unlocks(username, spotpost_id)
 	#
 	###
 	def __init__(self):
@@ -120,7 +121,18 @@ class DBManager:
 		#Rates(username, spotpost_id, comment_id)
 		cursor.execute("CREATE TABLE IF NOT EXISTS Rates(username TEXT, spotpost_id INTEGER DEFAULT -1 NOT NULL, comment_id INTEGER DEFAULT -1 NOT NULL)")
 
+		#Unlocks(username, spotpost_id)
+		cursor.execute("CREATE TABLE IF NOT EXISTS Unlocks(username TEXT, spotpost_id INTEGER)")
+
 		testdata.add_test_data()
+
+	###
+	#
+	# Inserts in an unlock relationship, that spotpost is completely viewable by the user.
+	#
+	###
+	def insert_unlock_relation(self, username, id):
+		cursor.execute("INSERT INTO Unlocks(username, spotpost_id) VALUES (?,?)", (username, id))
 
 	###
 	#
@@ -342,7 +354,7 @@ class DBManager:
 
 	def update_privilege(self, username, newpriv):
 		cursor.execute("UPDATE Users SET privilege = ? WHERE username = ?", (newpriv, username))
-		
+
 
 	###
 	#
@@ -405,13 +417,15 @@ class DBManager:
 		cursor.execute("SELECT * FROM Rates WHERE username = ? AND comment_id = ?", (username, id))
 		curr_user_data = cursor.fetchone()
 
-		cursor.execute("SELECT * FROM SpotPostComments WHERE id = ?", (id,))
+		cursor.execute("SELECT username, message_id FROM SpotPostComments WHERE id = ?", (id,))
 		spotpost_data = cursor.fetchone()
 
 		if not curr_user_data and spotpost_data:		#If the user HASN'T upvoted, and the comment exists.
-			comment_creator = spotpost_data[6]
+			comment_creator = spotpost_data[0]
+			spotpost_id = spotpost_data[1]
+
 			cursor.execute("UPDATE SpotPostComments SET reputation = reputation + ? WHERE id = ?", (change_in_reputation, id))					# Increase rep of comment
-			cursor.execute("INSERT INTO Rates (username, spotpost_id) VALUES (?, ?)", (username, id))	# Insert relation into Rates
+			cursor.execute("INSERT INTO Rates (username, spotpost_id, comment_id) VALUES (?, ?, ?)", (username, spotpost_id, id))	# Insert relation into Rates
 			cursor.execute("UPDATE Users SET reputation = reputation + ? WHERE username = ?", (change_in_reputation, comment_creator))	# Increase rep of Creator
 			connect.commit()
 			return "SUCCESS"
@@ -481,12 +495,44 @@ class DBManager:
 		if first_data:
 			return "ERROR MUST ENTER IN ONE VALUE."
 		
-		query = query + where_query
-		query_data = query_data + (id,)
+		query 		= query + where_query
+		query_data 	= query_data + (id,)
 
 		cursor.execute(query, query_data)
 		connect.commit()
 
+	###
+	#
+	# Deletes all comments contained inside the Spotpost with id = id.
+	#
+	# id = id of spotpost whose comments will be deleted.
+	#
+	###
+	def delete_comments_by_spotpost(self, id):
+		cursor.execute("DELETE FROM SpotPostsComments WHERE message_id = ?", (id,))
+		cursor.commit()
+
+	###
+	#
+	# Deletes all rates relations associated with the deleted spotpost.
+	#
+	# id = id of spotpost whose rates will be deleted.
+	#
+	###
+	def delete_spotpost_rates(id):
+		cursor.execute("DELETE FROM Rates WHERE spotpost_id = ?", (id,))
+		cursor.commit()
+
+	###
+	#
+	# Deletes all unlocks relations associated with the deleted spotpost.
+	#
+	# id = id of spotpost whose unlocks will be deleted.
+	#
+	###
+	def delete_spotpost_unlocks(id):
+		cursor.execute("DELETE FROM Unlocks WHERE spotpost_id = ?", (id,))
+		cursor.commit()
 
 	###
 	#
@@ -494,9 +540,14 @@ class DBManager:
 	#
 	#	@param id = id of spotpost to delete.
 	#
+	#	@TODO Make sure it deletes dependent data from DB.
 	###
 	def delete_post(self, id):
 		cursor.execute("DELETE FROM SpotPosts WHERE id = ?", (id,))
+		self.delete_comments_by_spotpost(id)
+		self.delete_spotpost_rates(id)
+		self.delete_spotpost_unlocks(id)
+
 		connect.commit()
 
 	###

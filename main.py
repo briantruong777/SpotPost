@@ -13,8 +13,8 @@
 from flask 				import Flask, session, request, abort, render_template, redirect, url_for, escape
 from passlib.hash 		import sha256_crypt
 from resource.dbmanager import DBManager
-from Crypto.PublicKey import RSA
-from Crypto import Random
+from Crypto.PublicKey 	import RSA
+from Crypto 			import Random
 
 #from comments 		import add_comment
 import os
