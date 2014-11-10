@@ -58,6 +58,7 @@ def build_username_JSON(username):
 		user_dict['username'] 		= unidecode(row[0])
 		user_dict['profile_pic_id'] = row[2]
 		user_dict['reputation']		= row[3]
+		user_dict['privilege'] 		= row[4]
 
 	return user_dict
 
@@ -129,10 +130,13 @@ class DBManager:
 	###
 	#
 	# Inserts in an unlock relationship, that spotpost is completely viewable by the user.
+	# @param username = username of user who unlocked the spotpost.
+	# @param id = id of unlocked spotpost.
 	#
 	###
 	def insert_unlock_relation(self, username, id):
 		cursor.execute("INSERT INTO Unlocks(username, spotpost_id) VALUES (?,?)", (username, id))
+		connect.commit()
 
 	###
 	#
@@ -342,7 +346,22 @@ class DBManager:
 
 	###
 	#
+	# Returns information about a given user. Returns it in dictionary format according
+	# to the following schema.
+	#---------------------------------------
+	# "username" 	: username of user.
+	# "reputation"	: reputation of user.
+	# "privilege" 	: privilege level of user.
+	#
+	###
+	def get_user(self, username):
+		data = build_username_JSON(username)
+		return data
+
+	###
+	#
 	# Gets the privileges of the user.
+	# @param username = username of user whos priviliges are to be returned.
 	# @return 0 if regular user, 1 if admin.
 	#
 	###
@@ -352,8 +371,17 @@ class DBManager:
 
 		return privilege[0]
 
+	###
+	#
+	# Updates the privileges of the user.
+	# @param username = username of user whos priviliges are to be changed.
+	# @param newpriv = new privilege level of user.
+	# @return 0 if regular user, 1 if admin.
+	#
+	###
 	def update_privilege(self, username, newpriv):
 		cursor.execute("UPDATE Users SET privilege = ? WHERE username = ?", (newpriv, username))
+		connect.commit()
 
 
 	###
