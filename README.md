@@ -78,6 +78,11 @@ Server API
 3. Server will check the encrypted password and will log the user in.
 4. User will be pushed onto session object.
 
+### Promoting a User
+1. Only admin's may promote a user to be an admin.
+2. In order to promote a user go to `/promote/<username>`, where `<username>` is the user to be promoted.
+3. This will make a user an admin. If they already are an admin nothing happens. 
+
 ### Logging Out
 1. Simply navigate to `/_logout`.
 2. This will pop the user from the session.
