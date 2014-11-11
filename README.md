@@ -103,6 +103,9 @@ Server API
 		* A `lock_value` of 0 gets you all SpotPosts. Therefore this is the default value.
 		* A `lock_value` of 1 gets you all LOCKED SpotPosts.
 		* A `lock_value` of 2 gets you all UNLOCKED SpotPosts.
+	* `unlock_posts`: Value determining whether to unlock posts returned.
+		* A value of 0 or no value does NOT unlocks posts.
+		* Any other value will unlock posts.
 	* Location Based parameters. All three must be included, search ignores proper subsets.
 		* `latitude`  : Latitude of center point of bounding square.
 		* `longitude` : Longitude of center point of bounding square. 

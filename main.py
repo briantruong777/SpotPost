@@ -171,16 +171,16 @@ def post_comment():
 # URL must be constructed following convention below (NOT ALL DATA IS REQUIRED):
 # URL?min_reputation 	= minimum reputation to search for. 
 # URL?/&max_reputation 	= maximum reputation to search for. 	
-# URL?/&id 		 	= desired spotpost ID.
-# URL?/&latitude 	= latitude of center point of bounding square. 		NOTE: ALL 3 VARIABLES MUST BE PROVIDED TO USE BOUNDING SQUARE. OTHERWISE SEARCH IGNORES IT.
-# URL&longitude   	= longitude of center point of bounding square.
-# URL&radius        = "radius" of bounding square.
-# URL?/&lock_value  = Lock status of spotposts. (0 = All posts locked or unlocked, 1 = All locked posts, 2 = All unlocked posts).
+# URL?/&id 		 	 = desired spotpost ID.
+# URL?/&latitude 	 = latitude of center point of bounding square. 		NOTE: ALL 3 VARIABLES MUST BE PROVIDED TO USE BOUNDING SQUARE. OTHERWISE SEARCH IGNORES IT.
+# URL&longitude   	 = longitude of center point of bounding square.
+# URL&radius         = "radius" of bounding square.
+# URL?/&lock_value   = Lock status of spotposts. (0 = All posts locked or unlocked, 1 = All locked posts, 2 = All unlocked posts).
+# URL?/&unlock_posts = Unlock all returned posts for the user. 0 or nothing = do not unlock posts, everything else = unlock posts. 
 #
 ###
 @app.route('/spotpost/_get')
 def get_spotpost():
-	location_search = False
 	min_reputation 	= request.args.get('min_reputation')
 	max_reputation 	= request.args.get('max_reputation')
 	username 		= request.args.get('username')
@@ -188,7 +188,10 @@ def get_spotpost():
 	latitude 		= request.args.get('latitude')
 	longitude 		= request.args.get('longitude')
 	radius 			= request.args.get('radius')
-	lock_value		= request.args.get('lock_value')
+	lock_value		= int(request.args.get('lock_value'))
+	unlock_posts 	= int(request.args.get('unlock_posts'))
+
+	location_search = False
 	max_longitude	= None
 	min_longitude	= None
 	max_latitude 	= None
@@ -198,7 +201,16 @@ def get_spotpost():
 		max_longitude, max_latitude, min_longitude, min_latitude = calc_bounding_coords(longitude, latitude, radius)
 		location_search = True
 
+	if not username and 'username' in session.keys():
+		username = session['username']
+
 	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, min_latitude, max_latitude, min_longitude, max_longitude, radius, location_search, lock_value)
+
+	if unlock_posts and username:
+		#data is an array of dictionaries. 
+		for row in data:
+			unlock_id = row['id']
+			insert_unlock_relation(username, unlock_id)
 
 	return json.dumps(data)
 
@@ -361,6 +373,7 @@ def promote_user(username):
 			manager.set_privilege(username, 1)
 	else:
 		return "ERROR: Must be logged in."
+
 ###
 #
 #	Logs the user out.
@@ -369,6 +382,7 @@ def promote_user(username):
 @app.route('/_logout')
 def logout():
 	session.pop('username', None)
+	session.pop('privilege', None)
 	return redirect(url_for('index'))
 
 ###
