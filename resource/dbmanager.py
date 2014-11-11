@@ -149,7 +149,7 @@ class DBManager:
 
 	###
 	#
-	# Inserts in an unlock relationship, that spotpost is completely viewable by the user.
+	# Inserts in an unlock relationship. Once unlocked that spotpost is completely viewable by the user.
 	# @param username = username of user who unlocked the spotpost.
 	# @param id = id of unlocked spotpost.
 	#
@@ -240,7 +240,13 @@ class DBManager:
 	#
 	##
 	def insert_user(self, username, password):
-		store_hash_pass(username, password)
+		cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
+		exists = cursor.fetchone()
+
+		if not exists:
+			store_hash_pass(username, password)
+		else:
+			return "ERROR USERNAME ALREADY IN USE"
 
 		return "SUCCESS"		
 
@@ -315,6 +321,7 @@ class DBManager:
 		where_query = False
 
 		if lock_value:
+			lock_value = int(lock_value)
 			if lock_value == 1:
 				query = query + " INNER JOIN Unlocks ON SpotPosts.id <> Unlocks.spotpost_id "
 			else:
@@ -427,11 +434,11 @@ class DBManager:
 	#
 	###
 	def validate_user(self, username, password):
-		cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
+		cursor.execute("SELECT password FROM Users WHERE username = ?", (username,))
 		data = cursor.fetchone()
 
 		if data:
-			db_hash = data[1]
+			db_hash = data[0]
 			if(sha256_crypt.verify(client_password, db_hash)):
 				return True
 			else:

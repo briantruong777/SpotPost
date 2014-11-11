@@ -181,15 +181,15 @@ def post_comment():
 ###
 @app.route('/spotpost/_get')
 def get_spotpost():
-	min_reputation 	= request.args.get('min_reputation')
-	max_reputation 	= request.args.get('max_reputation')
-	username 		= request.args.get('username')
-	post_id 		= request.args.get('id')
-	latitude 		= request.args.get('latitude')
-	longitude 		= request.args.get('longitude')
-	radius 			= request.args.get('radius')
-	lock_value		= int(request.args.get('lock_value'))
-	unlock_posts 	= int(request.args.get('unlock_posts'))
+	min_reputation 		= request.args.get('min_reputation')
+	max_reputation	 	= request.args.get('max_reputation')
+	username 			= request.args.get('username')
+	post_id 			= request.args.get('id')
+	latitude 			= request.args.get('latitude')
+	longitude 			= request.args.get('longitude')
+	radius 				= request.args.get('radius')
+	lock_value			= request.args.get('lock_value')
+	unlock_posts	 	= request.args.get('unlock_posts')
 
 	location_search = False
 	max_longitude	= None
@@ -207,10 +207,12 @@ def get_spotpost():
 	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, min_latitude, max_latitude, min_longitude, max_longitude, radius, location_search, lock_value)
 
 	if unlock_posts and username:
-		#data is an array of dictionaries. 
-		for row in data:
-			unlock_id = row['id']
-			insert_unlock_relation(username, unlock_id)
+		unlock_posts = int(unlock_posts)
+		if unlock_posts:
+			#data is an array of dictionaries. 
+			for row in data:
+				unlock_id = row['id']
+				insert_unlock_relation(username, unlock_id)
 
 	return json.dumps(data)
 
