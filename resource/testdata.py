@@ -10,7 +10,7 @@ def add_spotposts():
 	username 		= "Tester"
 	longitude 		= 18.0
 	latitude 		= 51.0
-	reputation 		= 25523
+	reputation 		= 255
 	
 	cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?,?)", (content, title, reputation, longitude, latitude, username))
 
