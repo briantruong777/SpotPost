@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Spotpost.iml" filepath="$PROJECT_DIR$/Spotpost.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SpotPost.iml" filepath="$PROJECT_DIR$/SpotPost.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
