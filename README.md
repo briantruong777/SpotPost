@@ -120,7 +120,7 @@ Server API
 	* `rating`   	: Rating of Spotpost.
 	* `longitude`	: Longitude of Spotpost.
 	* `latitude`  	: Latitude of Spotpost.
-	* `username`  	: A dictionary containing the following.
+	* `user`  		: A dictionary containing the following.
 		* `username`   : Name of user who posted the Spotpost.
 		* `reputation` : Reputation of users who posted the Spotpost.
 	* `comments`  	: Array of comments, where each comment contains the following.

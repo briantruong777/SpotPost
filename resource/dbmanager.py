@@ -12,7 +12,6 @@
 ' 
 '''
 import sqlite3
-import testdata
 from passlib.hash 	import sha256_crypt
 from unidecode 		import unidecode
 
@@ -111,14 +110,6 @@ class DBManager:
 	#
 	###
 	def __init__(self):
-		#Drop all the tables in the Database so that we can make a clean new one.
-		cursor.execute("DROP TABLE IF EXISTS SpotPosts")
-		cursor.execute("DROP TABLE IF EXISTS SpotPostComments")
-		cursor.execute("DROP TABLE IF EXISTS Users")
-		cursor.execute("DROP TABLE IF EXISTS Follows")
-		cursor.execute("DROP TABLE IF EXISTS Photos")
-		cursor.execute("DROP TABLE IF EXISTS Rates")
-
 		#SpotPosts(id, content, photo_id, reputation, longitude, latitude, visibility, user_id, time)
 		cursor.execute("CREATE TABLE IF NOT EXISTS SpotPosts(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, content TEXT, title TEXT," + 
 			"reputation INTEGER DEFAULT 0, longitude REAL NOT NULL, latitude REAL NOT NULL," + 
@@ -144,8 +135,6 @@ class DBManager:
 
 		#Unlocks(username, spotpost_id)
 		cursor.execute("CREATE TABLE IF NOT EXISTS Unlocks(username TEXT, spotpost_id INTEGER)")
-
-		testdata.add_test_data()
 
 	###
 	#
@@ -224,7 +213,7 @@ class DBManager:
 			client_username = form['username']
 
 		if reputation:
-			cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, reputation, longitude, latitude, client_username))
+			cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?,?)", (content, title, reputation, longitude, latitude, client_username))
 		else:
 			cursor.execute("INSERT INTO SpotPosts(content, title, longitude, latitude, username) VALUES (?,?,?,?)", (content, longitude, latitude, client_username))
 
@@ -376,7 +365,7 @@ class DBManager:
 			data_dict['reputation'] = row[3]
 			data_dict['longitude']	= row[4]
 			data_dict['latitude'] 	= row[5]
-			data_dict['username'] 	= build_username_JSON(unidecode(row[6]))
+			data_dict['user'] 		= build_username_JSON(unidecode(row[6]))
 			data_dict['time'] 		= unidecode(row[7])
 			data_dict['comments'] 	= build_comments_JSON(row[0])
 
