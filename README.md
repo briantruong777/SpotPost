@@ -51,32 +51,36 @@ Notes for Deployment Server
   permissions may not be correct for the deployment server (needs to be group
   writable). Also the directory the database is in needs to be group writable
 
-Server API
+Jakub's Corner
 ========
+
+Server API
+--------
 
 ### Generating Test Data
 1. Simply run `python testdata.py`
 2. This will empty the tables and add in test data.
-
-### Admin Info
-1. Admin in test data's password is `BananaPeppers`
+3. WARNING THIS HASN'T BEEN UPDATED. THEREFORE WILL RESULT IN ERRORS (11/18/2014)
 
 ### Registering a User
 1. Send a `POST` request to `/_register` containing the user's info.
-2. User's info is expected as a JSON following this format:
+2. `/_register` will NOT accept get requests.
+3. We are assuming `login.html` will `POST` registration information here.
+4. User's info is expected as a JSON following this format:
 	* `username` : Username to register.
 	* `password` : Password of new user.
-3. Server will store the password encrypted using SHA256-encrypt.
-4. This will log the person in once they have registered. 
-5. It is also important to note this does not handle duplicates yet.
+5. Server will store the password encrypted using SHA256-encrypt.
+6. Priviledge of user is automatically set to 0, as in regular user priveledges.
+7. This will log the person in once they have registered. 
 
 ### Logging in as a User
-1. Send a `POST` request to `/_login` containing the user's info.
-2. User's info is expected as a JSON following this format:
+1. Send a `POST` request to `/login` containing the user's info.
+2. A `GET` request will redirect the user to the login form contained inside `login.html`.
+3. It is assumed `login.html` will be the one to send a `POST` to `/login`.
+4. User's info is expected as a JSON following this format:
 	* `username` : Username of user.
 	* `password` : User's password.
-3. Server will check the encrypted password and will log the user in.
-4. User will be pushed onto session object.
+5. User will be pushed onto session object.
 
 ### Promoting a User
 1. Only admin's may promote a user to be an admin.
@@ -88,7 +92,6 @@ Server API
 2. This will pop the user from the session.
 
 ### Getting Spotposts
-
 1. In order to obtain a spotpost a GET request must be made to `www.spotpost.me/spotpost/_get`.
 2. This will return a JSON file containing either all Spotposts, or Spotposts based on your search parameters.
 3. To add search parameters add `?<parameter name> = <parameter value>` to the url for the first parameter.
@@ -140,7 +143,7 @@ Server API
 	* `reputation`	: Custom starting reputation of SpotPost. Default is 0.
 
 ### Updating Spotposts
-1. You must be logged in as `Admin` to update spotposts.
+1. You must be logged in as an admin to update spotposts.
 2. In order to update you must make a `POST` request to `/spotpost/_update`.
 3. You must also send a JSON file containing the data associated with the SpotPost. 
 4. Format the JSON in the following way.
@@ -190,7 +193,7 @@ Server API
 ### Following A User
 1. Go to `/_follow/<username>` where `<username>` is the username of the person being followed.
 2. This will make the current logged in user follow `<username>`.
-3. Accounts for duplicates and will prevent users from double following.
+3. This accounts for duplicates and will prevent users from double following.
 
 ### Unfollowing A User
 1. Go to `/_unfollow/<username>` where `<username>` is the username of the person being followed.
@@ -203,3 +206,14 @@ Server API
 
 ### ERRORS
 Section under construction will be available once frontend gets further along.
+
+Website Structure
+========
+
+This is where I will write basically what HTML pages the server expects and what each page does. If I am wrong with what you designed notify me and I will change.
+Put simply this is what the server thinks its seeing and doing.
+
+### HTML Pages
+* `login.html`, A login page to `POST` login's and `POST` new registrations.
+* `index.html`, The main page where all other operations occur.
+* `admin.html`, A possible admin page which allows admins to use tools in the API. 
