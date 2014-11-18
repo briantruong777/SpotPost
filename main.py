@@ -309,56 +309,39 @@ def update_spotpost():
 #	Logs the user in if the user exists and the password is correct.
 #
 ###
-@app.route('/_login', methods =['GET', 'POST'])
+@app.route('/login', methods =['GET', 'POST'])
 def login():
 	if request.method == 'POST' and 'username' in request.form.keys():
-		enc_password = request.form['password']
 		username = request.form['username']
-		password = key.decrypt(enc_pass)
+		password = request.form['password']
 
 		valid_login = manager.validate_user(username, password)
 		
 		if valid_login:
 			session['username'] = username
-			session['privilege'] = manager.get_privilege(curr_user)
-			redirect(url_for('index'))
+			session['privilege'] = manager.get_privilege(username)
+			return redirect(url_for('index'))
 		else:
 			return "INVALID LOGIN DETAILS"
 	elif request.method == 'POST':
 		return "ERROR INVALID FORMAT"
 	
 	#@TODO REPLACE WITH LOGIN FORM
-	return '''
-        <form action="" method="post">
-            <p><input type=text name=username>
-            <p><input type=text name=password>
-            <p><input type=submit value=Login>
-        </form>
-    '''
+	return render_template('login.html')
 
 ###
 #
 #	Registers the user into the Database.
 #
 ###
-@app.route('/_register', methods =['GET', 'POST'])
+@app.route('/_register', methods =['POST'])
 def register():
-	if request.method == 'POST':
-		enc_pass = request.form['password']
-		passsword = key.decrypt(enc_pass)
+	password = request.form['password']
 
-		manager.insert_user(request.form['username'], password)
-		session['privilege'] = manager.get_privilege(curr_user)
-		session['username'] = request.form['username']
-		redirect(url_for('index'))
-
-	return '''
-        <form action="" method="post">
-            <p><input type=text name=username>
-            <p><input type=text name=password>
-            <p><input type=submit value=Login>
-        </form>
-    '''
+	manager.insert_user(request.form['username'], password)
+	#session['privilege'] = manager.get_privilege(curr_user)
+	session['username'] = request.form['username']
+	redirect(url_for('index'))
 
 ###
 #
@@ -398,8 +381,10 @@ def index():
 	#	return 'Logged in as %s' % escape(session['username'])
 	#return 'You are not logged in'
 	session['username'] = "Admin"
-	return render_template('index.html')
-
+	if session['username']:
+		return render_template('index.html')
+	else:
+		return redirect(url_for(''))
 if __name__ == '__main__':
 	# Runs on port 5000 by default
 	# url: "localhost:5000"
