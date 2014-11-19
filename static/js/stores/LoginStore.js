@@ -97,9 +97,9 @@ LoginStore.dispatchToken = AppDispatcher.register(function(payload) {
       else {
         _isBusy = true;
         var regObject = {
-          username: action.username,
-          password: action.password,
-          email: action.email
+          username: username,
+          password: password,
+          email: email
         };
         xhr('POST', SPOTPOST.getRegisterUrl(), JSON.stringify(regObject))
           .success(function(data) {
