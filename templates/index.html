@@ -1,29 +1,16 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>JScript Test</title>
-<link href="http://fonts.googleapis.com/css?family=Raleway:400,200,500,600,700,800,300" rel="stylesheet" />
-
-<!--[if IE 6]>
-<link href="default_ie6.css" rel="stylesheet" type="text/css" />
-<![endif]-->
-</head>
-<body>
-<div id="wrapper">
-	<div id="page" class="container">
-		<div class="title">
-			<h1>Javascript Test</h1>
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>SpotPost</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	</head>
+	<body>
+		<div id="container">
+			<section id="app"></section>
 		</div>
-		<div id = "button">
-			<button id = "testButton" type="button">Test it out!</button>
-		</div>
-		<span id = "para"> </span>
-		<table id = "testing"></table>
-	</div>
-</div>
-<script type="text/javascript" src="{{ url_for('static', filename='test2.js') }}"></script>
-</body>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+		<script src="../static/js/bundle.js"></script>
+	</body>
 </html>
