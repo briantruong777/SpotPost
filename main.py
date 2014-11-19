@@ -13,8 +13,6 @@
 from flask 				import Flask, session, request, abort, render_template, redirect, url_for, escape
 from passlib.hash 		import sha256_crypt
 from resource.dbmanager import DBManager
-from Crypto.PublicKey 	import RSA
-from Crypto 			import Random
 
 #from comments 		import add_comment
 import os
@@ -28,10 +26,6 @@ try: import simplejson as json
 except ImportError: import json
 
 manager = DBManager()
-
-# RSA Encryption Key.
-random_generator = Random.new().read
-key = RSA.generate(1024, random_generator)
 
 app = Flask(__name__)
 
@@ -72,19 +66,6 @@ def calc_bounding_coords(lon, lat, radius):
 
 
 	return max_long, max_lat, min_long, min_lat
-
-###
-#
-# Gets the public key required for encryption.
-#
-# Data is sent as a JSON with {"key" : public key}
-#
-###
-@app.route('/_publickey')
-def get_public_key():
-	pub_keydict = {"key" : key.publickey()}
-
-	return json.dumps(pub_keydict)
 
 ###
 #
@@ -136,6 +117,7 @@ def unfollow_user(username):
 # 
 # JSON must be constructed following convention below (REQUIRED DATA IS DENOTED WITH A *):
 # * "content"   		: "text of spotpost"
+# * "title" 			: "title of spotpost"
 # "username"  			: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
 # * "latitude" 			: "latitude of spotpost"
 # * "longitude" 		: "longitude of spotpost"
@@ -144,7 +126,13 @@ def unfollow_user(username):
 ###
 @app.route('/spotpost/_post', methods = ['POST'])
 def post_spotpost():
-	return manager.insert_spotpost(request.form, session['username'])
+	if 'username' in session.keys():
+		username = session['username']
+		error_dict = manager.insert_spotpost(request.form, username)
+	else:
+		error_dict = manager.insert_spotpost(request.form, None)
+
+	return json.dumps(error_dict)
 
 ###
 #
@@ -356,6 +344,8 @@ def promote_user(username):
 		privilege = manager.get_privilege(curr_user)
 		if privilege:
 			manager.set_privilege(username, 1)
+		else:
+			return "ERROR: Must be admin to do this."
 	else:
 		return "ERROR: Must be logged in."
 
@@ -380,11 +370,13 @@ def index():
 	#if 'username' in session:
 	#	return 'Logged in as %s' % escape(session['username'])
 	#return 'You are not logged in'
-	session['username'] = "Admin"
+	session['username']  = "Admin"
+	session['privilege'] = 1
 	if session['username']:
 		return render_template('index.html')
 	else:
 		return redirect(url_for(''))
+
 if __name__ == '__main__':
 	# Runs on port 5000 by default
 	# url: "localhost:5000"
