@@ -204,8 +204,18 @@ Server API
 2. This will return a JSON file containing an array of usernames.
 3. In the future it will return an array of user arrays like `get_spotpost` does currently.
 
-### ERRORS
-Section under construction will be available once frontend gets further along.
+ERRORS
+--------
+On every interaction with the server you will get a JSON back. With at least an `error` field containing the following:
+* `code` 	: Integer number pertaining to the error
+* `message` : String containing a short description about the error.
+
+### Error Codes
+While you will always get a message with the code I thought I would put what each code means for checking purposes and just in case.
+If an error is described here, you can assume it is implemented in the server and will be thrown when appropriate.
+Key: `code` : `description`
+* `1000` : `Nothing is wrong, the operation was successful.`
+* Placeholder!
 
 Website Structure
 ========

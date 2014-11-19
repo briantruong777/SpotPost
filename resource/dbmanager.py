@@ -196,6 +196,7 @@ class DBManager:
 	# 
 	# JSON must be constructed following convention below (REQUIRED DATA IS DENOTED WITH A *):
 	# * "content"   		: "text of spotpost"
+	# * "title"				: "title of spotpost"
 	# "username"  			: "username of person making spotpost"  	NOTE: MAY BE DEPRECEATED IN FUTURE VERSIONING
 	# * "latitude" 			: "latitude of spotpost"
 	# * "longitude" 		: "longitude of spotpost"
@@ -215,9 +216,10 @@ class DBManager:
 		if reputation:
 			cursor.execute("INSERT INTO SpotPosts(content, title, reputation, longitude, latitude, username) VALUES (?,?,?,?,?,?)", (content, title, reputation, longitude, latitude, client_username))
 		else:
-			cursor.execute("INSERT INTO SpotPosts(content, title, longitude, latitude, username) VALUES (?,?,?,?)", (content, longitude, latitude, client_username))
+			cursor.execute("INSERT INTO SpotPosts(content, title, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, title, longitude, latitude, client_username))
 
 		connect.commit()
+		return {"error": {"code": 1000, "message" : "Success."}}
 
 	###
 	#

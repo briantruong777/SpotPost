@@ -126,7 +126,13 @@ def unfollow_user(username):
 ###
 @app.route('/spotpost/_post', methods = ['POST'])
 def post_spotpost():
-	return manager.insert_spotpost(request.form, session['username'])
+	if 'username' in session.keys():
+		username = session['username']
+		error_dict = manager.insert_spotpost(request.form, username)
+	else:
+		error_dict = manager.insert_spotpost(request.form, None)
+
+	return json.dumps(error_dict)
 
 ###
 #
