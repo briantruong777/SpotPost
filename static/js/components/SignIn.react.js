@@ -19,7 +19,6 @@ var SignIn = React.createClass({
 
   _onKeyDown: function(event) {
     this._clearError();
-    console.log('key:' + event.keyCode);
     if (event.keyCode === ENTER_KEY) {
       this._submit();
     }
