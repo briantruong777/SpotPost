@@ -10,8 +10,9 @@ var xhr = require('../utils/xhr');
 
 var SpotPostsStore = merge(EventEmitter.prototype, {
 
-  getAllSpotPosts: function() {
-    return
+  getState: function() {
+    return {
+    };
   },
 
   emitChange: function() {
