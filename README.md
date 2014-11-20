@@ -216,6 +216,7 @@ If an error is described here, you can assume it is implemented in the server an
 Key: `code` : `description`
 * `1000` : `Success.`
 * `1050` : `Invalid login information.`
+* `1055` : `Username already in use.`
 * Placeholder!
 
 Website Structure

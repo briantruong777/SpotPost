@@ -326,12 +326,18 @@ def login():
 ###
 @app.route('/_register', methods =['POST'])
 def register():
-	password = request.form['password']
+	data = request.data
+	decoded_data = json.loads(data)
+	username = decoded_data['username']
+	password = decoded_data['password']
 
-	manager.insert_user(request.form['username'], password)
-	#session['privilege'] = manager.get_privilege(curr_user)
-	session['username'] = request.form['username']
-	redirect(url_for('index'))
+	retval = manager.insert_user(username, password)
+
+	#Log user in. 
+	session['privilege'] = manager.get_privilege(username)
+	session['username'] = request.form[username]
+
+	return json.dumps(retval)
 
 ###
 #
@@ -381,7 +387,7 @@ if __name__ == '__main__':
 	# Runs on port 5000 by default
 	# url: "localhost:5000"
 	# Secret Key for sessions.
-
+	# @TODO Change to random key.
 	app.secret_key = 'Bv`L>?h^`qeQr6f7c$DK.E-gvMXZR+'
 	app.run(host="0.0.0.0")
 	manager.close_connection()

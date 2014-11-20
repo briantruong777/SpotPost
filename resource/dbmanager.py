@@ -219,7 +219,7 @@ class DBManager:
 			cursor.execute("INSERT INTO SpotPosts(content, title, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, title, longitude, latitude, client_username))
 
 		connect.commit()
-		return {"error": {"code": 1000, "message" : "Success."}}
+		return {"error": {"code": "1000", "message" : "Success."}}
 
 	###
 	#
@@ -237,9 +237,11 @@ class DBManager:
 		if not exists:
 			store_hash_pass(username, password)
 		else:
-			return "ERROR USERNAME ALREADY IN USE"
+			error_dict = {"code" : "1055", "message" : "Username already in use."}
+			return error_dict
 
-		return "SUCCESS"		
+		error_dict = {"code" : "1000" , "message" : "Success."}
+		return error_dict		
 
 	###
 	#
