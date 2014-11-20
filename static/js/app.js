@@ -21,10 +21,14 @@ var renderUserPage = function() {
   );
 };
 
+console.log(document.getElementById('app'));
+console.log(document.getElementById('loginApp'));
 if (document.getElementById('app')) {
+  console.log('USER PAGE');
   renderUserPage();
 }
 else if (document.getElementById('loginApp')) {
+  console.log('LOGIN PAGE');
   renderLoginPage();
 }
 
