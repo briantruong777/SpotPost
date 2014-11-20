@@ -12,7 +12,7 @@ How To Launch Development Site
 3. Run `git clone` with the git url
 4. Make a directory called `venv` inside here
 5. Run `virtualenv venv`
-6. Run `. venv/bin/activate`
+6. Run `. venv/bin/activate` (or `venv\scripts\activate` for Windows)
 7. Run `pip install flask`
 8. If you are done, run `deactivate` to exit the virtual environment
 
