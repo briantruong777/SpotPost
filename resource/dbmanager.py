@@ -430,7 +430,7 @@ class DBManager:
 
 		if data:
 			db_hash = data[0]
-			if(sha256_crypt.verify(client_password, db_hash)):
+			if(sha256_crypt.verify(password, db_hash)):
 				return True
 			else:
 				return False
