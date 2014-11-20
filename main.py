@@ -335,7 +335,7 @@ def register():
 
 	#Log user in. 
 	session['privilege'] = manager.get_privilege(username)
-	session['username'] = request.form[username]
+	session['username'] = username
 
 	return json.dumps(retval)
 
