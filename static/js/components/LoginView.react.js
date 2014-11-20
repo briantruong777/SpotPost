@@ -37,8 +37,8 @@ var LoginView = React.createClass({
     return (
       <div>
         <h1 className="col-sm-offset-1 col-md-4">Welcome to SpotPost!</h1>
-        <SignIn isLoggingIn={isBusy} error={signInError} />
-        <Register isLoggingIn={isBusy} error={registerError} />
+        <SignIn isBusy={isBusy} error={signInError} />
+        <Register isBusy={isBusy} error={registerError} />
       </div>
     );
   }
