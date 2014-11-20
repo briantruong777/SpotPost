@@ -214,7 +214,8 @@ On every interaction with the server you will get a JSON back. With at least an 
 While you will always get a message with the code I thought I would put what each code means for checking purposes and just in case.
 If an error is described here, you can assume it is implemented in the server and will be thrown when appropriate.
 Key: `code` : `description`
-* `1000` : `Nothing is wrong, the operation was successful.`
+* `1000` : `Success.`
+* `1050` : `Invalid login information.`
 * Placeholder!
 
 Website Structure
