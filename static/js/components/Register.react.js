@@ -72,25 +72,25 @@ var Register = React.createClass({
           <div className="form-group">
             <label className="col-md-2 control-label" >Username: </label>
             <div className="col-md-2">
-              <input className="col-md-2 form-control" ref="username" type="text" onKeyDown={this._onKeyDown} placeholder="username" disabled={isBusy} /><br/>
+              <input className="col-md-2 form-control" ref="username" type="text" onKeyDown={this._onKeyDown} placeholder="username" disabled={isBusy} />
             </div>
           </div>
           <div className="form-group">
             <label className="col-md-2 control-label" >Password: </label>
             <div className="col-md-2">
-              <input className="col-md-2 form-control" ref="password" type="password" onKeyDown={this._onKeyDown} placeholder="password" disabled={isBusy} /><br/>
+              <input className="col-md-2 form-control" ref="password" type="password" onKeyDown={this._onKeyDown} placeholder="password" disabled={isBusy} />
             </div>
           </div>
           <div className="form-group">
             <label className="col-md-2 control-label" >Retype password: </label>
             <div className="col-md-2">
-              <input className="col-md-2 form-control" ref="password2" type="password" onKeyDown={this._onKeyDown} placeholder="password" disabled={isBusy} /><br/>
+              <input className="col-md-2 form-control" ref="password2" type="password" onKeyDown={this._onKeyDown} placeholder="password" disabled={isBusy} />
             </div>
           </div>
           <div className="form-group">
             <label className="col-md-2 control-label" >Email address: </label>
             <div className="col-md-2">
-              <input className="col-md-2 form-control"  ref="email" type="text" onKeyDown={this._onKeyDown} placeholder="email" disabled={isBusy} /><br/>
+              <input className="col-md-2 form-control"  ref="email" type="text" onKeyDown={this._onKeyDown} placeholder="email" disabled={isBusy} />
             </div>
           </div>
           <div className="form-group">

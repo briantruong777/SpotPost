@@ -61,6 +61,8 @@ LoginStore.dispatchToken = AppDispatcher.register(function(payload) {
           username: action.username,
           password: action.password
         };
+        console.log(loginObject);
+        console.log(JSON.stringify(loginObject));
         xhr('POST', SPOTPOST.getLoginUrl(), JSON.stringify(loginObject))
           .success(function(data) {
             // TODO add check for failed sign in
@@ -101,6 +103,8 @@ LoginStore.dispatchToken = AppDispatcher.register(function(payload) {
           password: password,
           email: email
         };
+        console.log(regObject);
+        console.log(JSON.stringify(regObject));
         xhr('POST', SPOTPOST.getRegisterUrl(), JSON.stringify(regObject))
           .success(function(data) {
             // TODO add check for failed register
