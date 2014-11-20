@@ -310,11 +310,13 @@ def login():
 		if valid_login:
 			session['username'] = username
 			session['privilege'] = manager.get_privilege(username)
-			return redirect(url_for('index'))
+
+			error_dict = {"code" : "1000", "message" : "Success."}
+			return json.dumps(error_dict)
 		else:
-			return "INVALID LOGIN DETAILS"
+			error_dict = {"code" : "1050", "message" : "Invalid login information."}
+			return json.dumps(error_dict)
 	
-	#@TODO REPLACE WITH LOGIN FORM
 	return render_template('login.html')
 
 ###
