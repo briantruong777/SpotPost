@@ -5,6 +5,7 @@
 var React = require('react');
 
 var LoginView = require('./components/LoginView.react');
+var UserView = require('./components/UserView.react');
 
 var renderLoginPage = function() {
   React.renderComponent(
@@ -15,7 +16,7 @@ var renderLoginPage = function() {
 
 var renderUserPage = function() {
   React.renderComponent(
-    <LoginView />,
+    <UserView />,
     document.getElementById('app')
   );
 };
@@ -23,8 +24,7 @@ var renderUserPage = function() {
 if (document.getElementById('app')) {
   renderUserPage();
 }
-
-if (document.getElementById('loginApp')) {
+else if (document.getElementById('loginApp')) {
   renderLoginPage();
 }
 
