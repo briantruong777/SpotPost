@@ -299,9 +299,11 @@ def update_spotpost():
 ###
 @app.route('/login', methods =['GET', 'POST'])
 def login():
-	if request.method == 'POST' and 'username' in request.form.keys():
-		username = request.form['username']
-		password = request.form['password']
+	if request.method == 'POST':
+		data = request.data
+		decoded_data = json.loads(data)
+		username = decoded_data['username']
+		password = decoded_data['password']
 
 		valid_login = manager.validate_user(username, password)
 		
@@ -311,8 +313,6 @@ def login():
 			return redirect(url_for('index'))
 		else:
 			return "INVALID LOGIN DETAILS"
-	elif request.method == 'POST':
-		return "ERROR INVALID FORMAT"
 	
 	#@TODO REPLACE WITH LOGIN FORM
 	return render_template('login.html')
@@ -370,12 +370,10 @@ def index():
 	#if 'username' in session:
 	#	return 'Logged in as %s' % escape(session['username'])
 	#return 'You are not logged in'
-	session['username']  = "Admin"
-	session['privilege'] = 1
-	if session['username']:
+	if 'username' in session:
 		return render_template('index.html')
 	else:
-		return redirect(url_for(''))
+		return redirect(url_for('login'))
 
 if __name__ == '__main__':
 	# Runs on port 5000 by default
