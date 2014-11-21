@@ -2,6 +2,7 @@ package me.spotpost.spotpost;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -10,6 +11,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity
 {
+    private static final String TAG = "MapsActivity";
+
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private ServerConnect serverConnect;
 
@@ -78,6 +81,7 @@ public class MapsActivity extends FragmentActivity
      */
     void onLogin(boolean success)
     {
+        Log.d(TAG, "result of login: success = " + success);
     }
 
     /**
@@ -87,5 +91,6 @@ public class MapsActivity extends FragmentActivity
      */
     void onLogout(boolean success)
     {
+        Log.d(TAG, "result of logout: success = " + success);
     }
 }
