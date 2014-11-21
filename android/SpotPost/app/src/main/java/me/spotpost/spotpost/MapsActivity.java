@@ -1,7 +1,7 @@
 package me.spotpost.spotpost;
 
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -10,8 +10,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity
 {
-
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    private ServerConnect serverConnect;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -69,5 +69,23 @@ public class MapsActivity extends FragmentActivity
     {
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
         mMap.setMyLocationEnabled(true);
+    }
+
+    /**
+     * Called by serverConnect to indicate login has completed
+     *
+     * @param success true if login was successful
+     */
+    void onLogin(boolean success)
+    {
+    }
+
+    /**
+     * Called by serverConnect to indicate logout has completed
+     *
+     * @param success true if logout was successful
+     */
+    void onLogout(boolean success)
+    {
     }
 }
