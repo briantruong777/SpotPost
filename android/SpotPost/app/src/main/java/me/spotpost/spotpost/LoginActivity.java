@@ -3,6 +3,9 @@ package me.spotpost.spotpost;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -14,6 +17,15 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.util.Log;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 
 /**
@@ -21,6 +33,8 @@ import android.widget.TextView;
  */
 public class LoginActivity extends Activity
 {
+    private static final String TAG = "LoginActivity";
+
     private UserLoginTask mAuthTask = null;
 
     private AutoCompleteTextView mUsernameView;
@@ -116,8 +130,18 @@ public class LoginActivity extends Activity
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
+            ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.isConnected())
+            {
+                mAuthTask = new UserLoginTask(email, password);
+                mAuthTask.execute((Void) null);
+            }
+            else
+            {
+                showProgress(false);
+                Log.d(TAG, "network is not active");
+            }
         }
     }
 
@@ -169,7 +193,28 @@ public class LoginActivity extends Activity
         @Override
         protected Boolean doInBackground(Void... params)
         {
-            // TODO: attempt authentication against a network service.
+            try
+            {
+                URL url = new URL("spotpost.me/login");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setReadTimeout(10000);
+                conn.setConnectTimeout(15000);
+                conn.setDoOutput(true);
+                String temp = "{}";
+                conn.setFixedLengthStreamingMode(temp.length());
+
+                OutputStream out = new BufferedOutputStream(conn.getOutputStream());
+                out.write(temp.getBytes());
+
+                InputStream in = new BufferedInputStream(conn.getInputStream());
+                byte[] inData = new byte[100];
+                in.read(inData);
+            }
+            catch (IOException e)
+            {
+                Log.d(TAG, "IOException: " + e);
+                return false;
+            }
 
             return true;
         }
