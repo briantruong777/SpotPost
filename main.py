@@ -36,6 +36,13 @@ file_handler = FileHandler("spotpost_log")
 file_handler.setLevel(logging.WARNING)
 app.logger.addHandler(file_handler)
 
+
+###
+# Equation for scoring posts.
+# 
+# delta_lon
+###
+
 ###
 #
 # Calculates bounding latitude and longitude.
@@ -151,6 +158,40 @@ def post_comment():
 
 ###
 # 
+# Allows clientside to make a GET request to get spotposts around a center latitude longitude point.
+# Gets best top_count amount of spotposts. 10 default.
+# Uses a radius provided, 100 meters default.
+# 
+# URL must be constructed following convention below. Latitude and longitude are required:
+# URL?/&latitude 	 = latitude of center point of bounding square.
+# URL&longitude   	 = longitude of center point of bounding square.
+# URL?/&radius         = "radius" of bounding square.
+#
+###
+@app.route('/spotpost/_getlocation')
+def get_spotpost_by_location():
+	error_dict 	= {}
+	latitude 	= request.args.get('latitude')
+	longitude 	= request.args.get('longitude')
+	radius 		= request.args.get('radius')
+	top_count 	= request.args.get('top_count')
+
+	if not radius:
+		radius = 100
+	if not top_count:
+		top_count = 10
+
+	if not latitude or not longitude:
+		error_dict['error'] = {"code" : "1092", "message" : "Location not provided."}
+		return json.dumps(error_dict)
+
+	max_long, max_lat, min_long, min_lat = calc_bounding_coords(longitude, latitude, radius)
+
+	error_dict = manager.location_search_spotpost(min_lat, max_lat, min_long, max_long, top_count)
+	return json.dumps(error_dict)
+
+###
+# 
 # Allows clientside to make a GET request to get spotposts from the server database.
 # 
 # NOTE: TO ADD MORE ARGUMENTS THE CONVENTION ?min_reputation=10&max_reputation=100 MUST BE FOLLOWED.
@@ -162,10 +203,11 @@ def post_comment():
 # URL?/&id 		 	 = desired spotpost ID.
 # URL?/&latitude 	 = latitude of center point of bounding square. 		NOTE: ALL 3 VARIABLES MUST BE PROVIDED TO USE BOUNDING SQUARE. OTHERWISE SEARCH IGNORES IT.
 # URL&longitude   	 = longitude of center point of bounding square.
-# URL&radius         = "radius" of bounding square.
+# URL?/&radius         = "radius" of bounding square.
 # URL?/&lock_value   = Lock status of spotposts. (0 = All posts locked or unlocked, 1 = All locked posts, 2 = All unlocked posts).
 # URL?/&unlock_posts = Unlock all returned posts for the user. 0 or nothing = do not unlock posts, everything else = unlock posts. 
 #
+#	SEPERATE OUT FUNCTIONALITY.
 ###
 @app.route('/spotpost/_get')
 def get_spotpost():
@@ -173,26 +215,10 @@ def get_spotpost():
 	max_reputation	 	= request.args.get('max_reputation')
 	username 			= request.args.get('username')
 	post_id 			= request.args.get('id')
-	latitude 			= request.args.get('latitude')
-	longitude 			= request.args.get('longitude')
-	radius 				= request.args.get('radius')
 	lock_value			= request.args.get('lock_value')
 	unlock_posts	 	= request.args.get('unlock_posts')
 
-	location_search = False
-	max_longitude	= None
-	min_longitude	= None
-	max_latitude 	= None
-	min_latitude 	= None
-
-	if longitude and latitude and radius:
-		max_longitude, max_latitude, min_longitude, min_latitude = calc_bounding_coords(longitude, latitude, radius)
-		location_search = True
-
-	if not username and 'username' in session.keys():
-		username = session['username']
-
-	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, min_latitude, max_latitude, min_longitude, max_longitude, radius, location_search, lock_value)
+	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, lock_value)
 
 	if unlock_posts and username:
 		unlock_posts = int(unlock_posts)
@@ -263,11 +289,14 @@ def downvote_spotpost(id):
 ###
 @app.route('/spotpost/_delete/<id>')
 def delete_spotpost(id):
-	if session['privilege']:
+	error_dict = {}
+	if 'privilege' in session:
 		manager.delete_post(id)
-		return "SUCCESS"
+		error_dict['error'] = {"code" : "1000", "message" : "Success."}
+		return json.dumps(error_dict);
 	else:
-		return "ERROR NOT LOGGED IN AS ADMIN"
+		error_dict['error'] = {"code" : "1032", "message" : "Admin privileges required."}
+		return json.dumps(error_dict);
 
 ###
 #
@@ -286,11 +315,14 @@ def delete_spotpost(id):
 ###
 @app.route('/spotpost/_update', methods = ['POST'])
 def update_spotpost():
+	error_dict = {}
 	if session['privilege'] and request.form['id']:
 		manager.update_post(request.form)
-		return "SUCCESS"
+		error_dict['error'] = {"code" : "1000", "message" : "Success."}
+		return json.dumps(error_dict);
 	else:
-		return "ERROR NOT LOGGED IN AS ADMIN"
+		error_dict['error'] = {"code" : "1032", "message" : "Admin privileges required."}
+		return json.dumps(error_dict);
 
 ###
 #
@@ -347,15 +379,20 @@ def register():
 ###
 @app.route('/promote/<username>')
 def promote_user(username):
-	curr_user = session['username']
+	error_dict = {}
+
+	if 'username' in session:
+		curr_user = session['username']
+	else:
+		error_dict['error'] = {"code" : "1087", "message" : "Not logged in."}
+
 	if curr_user:
 		privilege = manager.get_privilege(curr_user)
 		if privilege:
-			manager.set_privilege(username, 1)
+			manager.update_privilege(username, 1)
 		else:
-			return "ERROR: Must be admin to do this."
-	else:
-		return "ERROR: Must be logged in."
+			error_dict['error'] = {"code" : "1032", "message" : "Admin privileges required."}
+			return json.dumps(error_dict)
 
 ###
 #

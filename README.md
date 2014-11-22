@@ -109,7 +109,7 @@ Server API
 	* `unlock_posts`: Value determining whether to unlock posts returned.
 		* A value of 0 or no value does NOT unlocks posts.
 		* Any other value will unlock posts.
-	* Location Based parameters. All three must be included, search ignores proper subsets.
+	* Location Based parameters. Latitude and Longitude are required, radius optional 100m default.
 		* `latitude`  : Latitude of center point of bounding square.
 		* `longitude` : Longitude of center point of bounding square. 
 		* `radius`    : Radius of the circle that the square inscribes in meters.
@@ -213,11 +213,25 @@ On every interaction with the server you will get a JSON back. With at least an 
 ### Error Codes
 While you will always get a message with the code I thought I would put what each code means for checking purposes and just in case.
 If an error is described here, you can assume it is implemented in the server and will be thrown when appropriate.
+Every use of the API will return an error JSON.
+The JSON structure is as follows:
+* `error` : `another json as described below.`
+	* `code` : `Numerical code pertaining to this error.`
+	* `message` : `Short description of the error.`
+
 Key: `code` : `description`
 * `1000` : `Success.`
+* `1032` : `Admin privileges required.`
 * `1050` : `Invalid login information.`
 * `1055` : `Username already in use.`
+* `1087` : `Not logged in.`
 * Placeholder!
+
+# 9000 Errors
+These SHOULDN'T occur and will only occur if something went haywire with the API.
+
+* `9110` = `User doesn't exist.`
+* PLACEHOLDER
 
 Website Structure
 ========

@@ -291,6 +291,18 @@ class DBManager:
 		return data
 
 	###
+	#
+	#
+	#	Equation: s = score(ups, downs)
+    #	order = log(max(abs(s), 1), 10)
+    #	sign = 1 if s > 0 else -1 if s < 0 else 0
+    #	seconds = epoch_seconds(date) - 1134028003
+    #	return round(order + sign * seconds / 45000, 7)
+	###
+	def location_search_spotpost(min_latitude, max_latitude, min_longitude, max_longitude, radius, top_count):
+		cursor.execute("SELECT * FROM SpotPosts WHERE latitude <= ? AND latitude >= ? AND longitude >= ? AND longitude <= ?")
+
+	###
 	#  
 	# Allows clientside to make a GET request to get spotposts from the server database.
 	# 
@@ -307,8 +319,7 @@ class DBManager:
 	# URL?/&lock_value  = Lock status of spotposts. (0 = All posts locked or unlocked, 1 = All locked posts, 2 = All unlocked posts).
 	#
 	###
-	def select_spotpost(self, min_reputation, max_reputation, username, post_id, min_latitude, 
-						max_latitude, min_longitude, max_longitude, radius, is_area_search, lock_value):
+	def select_spotpost(self, min_reputation, max_reputation, username, post_id, lock_value):
 		query = "SELECT * FROM SpotPosts"
 		query_data = ()
 		where_query = False
@@ -324,14 +335,6 @@ class DBManager:
 			query = query + " WHERE id = ?"
 			query_data = query_data + (post_id,)
 			where_query = True
-		if is_area_search:
-			if not where_query:
-				query 		= query + " WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
-				query_data 	= query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
-				where_query = True
-			else:
-				query 		= query + " AND latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
-				query_data 	= query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
 		if username:
 			if not where_query:
 				query 		= query + " WHERE username = ?"
@@ -413,9 +416,18 @@ class DBManager:
 	#
 	###
 	def update_privilege(self, username, newpriv):
-		cursor.execute("UPDATE Users SET privilege = ? WHERE username = ?", (newpriv, username))
+		error_dict = {}
+		cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
+		data = cursor.fetchall()
+		if data:
+			cursor.execute("UPDATE Users SET privilege = ? WHERE username = ?", (newpriv, username))
+			error_dict['error'] = {"code": "1000", "message" : "Success."}
+		else:
+			error_dict['error'] = {"code" : "9110", "message" : "User does not exist."}
+
 		connect.commit()
 
+		return error_dict
 
 	###
 	#
