@@ -17,6 +17,7 @@ from resource.dbmanager import DBManager
 #from comments 		import add_comment
 import os
 import sqlite3
+import math
 
 # For decoding JSON request data. Strings come in unicode format. Possibly useless :(.
 from unidecode import unidecode
@@ -185,10 +186,10 @@ def get_spotpost_by_location():
 		error_dict['error'] = {"code" : "1092", "message" : "Location not provided."}
 		return json.dumps(error_dict)
 
-	max_long, max_lat, min_long, min_lat = calc_bounding_coords(longitude, latitude, radius)
+	max_long, max_lat, min_long, min_lat = calc_bounding_coords(float(longitude), float(latitude), float(radius))
 
-	error_dict = manager.location_search_spotpost(min_lat, max_lat, min_long, max_long, top_count)
-	return json.dumps(error_dict)
+	data = manager.location_search_spotpost(min_lat, max_lat, min_long, max_long, top_count)
+	return json.dumps(data)
 
 ###
 # 

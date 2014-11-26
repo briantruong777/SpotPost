@@ -98,26 +98,22 @@ Server API
   for more parameters add `&<parameter name> = <parameter value>`.
 4. Jquery can do this for you using `.getJSON()` if possible find an alternative using whatever JS you use.
 5. List of possible parameters, replace `<parameter name>` from above with this.
-	* `min_rating` : Minimum rating of Spotpost to search for.
-	* `max_rating` : Maximum rating of Spotpost to search for.
-	* `username`   : Author of Spotpost to search for.
-	* `id`  	   : ID of Spotpost. This overrides the other search parameters.
-	* `lock_value` : Lock value of your search.
+	* `min_reputation` 	: Minimum rating of Spotpost to search for.
+	* `max_reputation`	: Maximum rating of Spotpost to search for.
+	* `username`   		: Author of Spotpost to search for.
+	* `id`  	   		: ID of Spotpost. This overrides the other search parameters.
+	* `lock_value` 		: Lock value of your search.
 		* A `lock_value` of 0 gets you all SpotPosts. Therefore this is the default value.
 		* A `lock_value` of 1 gets you all LOCKED SpotPosts.
 		* A `lock_value` of 2 gets you all UNLOCKED SpotPosts.
 	* `unlock_posts`: Value determining whether to unlock posts returned.
 		* A value of 0 or no value does NOT unlocks posts.
 		* Any other value will unlock posts.
-	* Location Based parameters. Latitude and Longitude are required, radius optional 100m default.
-		* `latitude`  : Latitude of center point of bounding square.
-		* `longitude` : Longitude of center point of bounding square. 
-		* `radius`    : Radius of the circle that the square inscribes in meters.
 6. JSON contains an array of Spotposts based on your search parameters.
 7. Each Spotpost is constructed as follows.
 	* `id` 		  	: ID of Spotpost.
 	* `content`  	: Content of Spotpost.
-	* `rating`   	: Rating of Spotpost.
+	* `reputation`  : Rating of Spotpost.
 	* `longitude`	: Longitude of Spotpost.
 	* `latitude`  	: Latitude of Spotpost.
 	* `user`  		: A dictionary containing the following.
@@ -130,6 +126,17 @@ Server API
 		* `username`   : Username of person who posted comment.
 		* `time`       : Date and Time comment was posted.
 	* `time`		: Date and Time Spotpost was posted. 
+
+### Getting Spotposts by Location and Score.
+1. To get spotposts by a certain location you must make a `GET` request to `/spotpost/_getlocation`
+2. This will return a JSON object containing the top posts in an area, all specified by you.
+3. It uses a scoring algorithm similar to reddit's.
+4. Parameters are required to use this functionality. Parameters are outlined below. Parameters must also be appended to the end of a URL using `?parameter1=x&parameter2=y` notation.
+	* `latitude` 	: Latitude of center point.
+	* `longitude` 	: Longitude of center point.
+	* `radius` 		: radius of circle to look inside of in meters. DEFAULT = 100 Meters.
+	* `top_count` 	: Number of top spotposts to return. DEFAULT = 10.
+4. Returned Spotposts follow the exact same convention as getting spotposts above.
 
 ### Posting Spotposts
 1. In order to post a SpotPost you must make a `POST` request to `/spotpost/_post`.
