@@ -232,6 +232,7 @@ Key: `code` : `description`
 * `1050` : `Invalid login information.`
 * `1055` : `Username already in use.`
 * `1087` : `Not logged in.`
+* `1092` : `Location Data not Provided.`
 * Placeholder!
 
 # 9000 Errors
