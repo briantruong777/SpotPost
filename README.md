@@ -60,7 +60,7 @@ Server API
 ### Generating Test Data
 1. Simply run `python testdata.py`
 2. This will empty the tables and add in test data.
-3. WARNING THIS HASN'T BEEN UPDATED. THEREFORE WILL RESULT IN ERRORS (11/18/2014)
+3. This should work now, if it errors out, run it again. Im still looking of how to fix this bug but it doesn't happen more than once.
 
 ### Registering a User
 1. Send a `POST` request to `/_register` containing the user's info.
