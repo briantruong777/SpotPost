@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 
@@ -102,20 +103,19 @@ public class LoginActivity extends Activity
         boolean cancel = false;
         View focusView = null;
 
-
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password))
-        {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        }
-
         // Check for a valid email address.
         if (TextUtils.isEmpty(email))
         {
             mUsernameView.setError(getString(R.string.error_field_required));
             focusView = mUsernameView;
+            cancel = true;
+        }
+
+        // Check for a valid password, if the user entered one.
+        if (TextUtils.isEmpty(password))
+        {
+            mPasswordView.setError(getString(R.string.error_invalid_password));
+            focusView = mPasswordView;
             cancel = true;
         }
 
@@ -193,27 +193,50 @@ public class LoginActivity extends Activity
         @Override
         protected Boolean doInBackground(Void... params)
         {
+            URL url = null;
+            HttpURLConnection conn = null;
+
             try
             {
-                URL url = new URL("spotpost.me/login");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                url = new URL("http://spotpost.me/login");
+                //url = new URL("http://www.google.com/about/careers");
+            }
+            catch (MalformedURLException e)
+            {
+                Log.d(TAG, "URL Exception: " + e);
+            }
+
+            try
+            {
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestProperty("Content-Type", "application/json");
                 conn.setReadTimeout(10000);
                 conn.setConnectTimeout(15000);
+
                 conn.setDoOutput(true);
-                String temp = "{}";
-                conn.setFixedLengthStreamingMode(temp.length());
+                byte[] temp = "{\"username\":\"admin\",\"password\":\"BananaPepper\"}".getBytes();
+                conn.setFixedLengthStreamingMode(temp.length);
+                //conn.setChunkedStreamingMode(0);
 
                 OutputStream out = new BufferedOutputStream(conn.getOutputStream());
-                out.write(temp.getBytes());
+                out.write(temp);
+                out.close();
+
+                Log.d(TAG, Integer.toString(conn.getResponseCode()));
 
                 InputStream in = new BufferedInputStream(conn.getInputStream());
-                byte[] inData = new byte[100];
+                byte[] inData = new byte[1000];
                 in.read(inData);
+                Log.d(TAG, "Received: " + new String(inData));
             }
             catch (IOException e)
             {
                 Log.d(TAG, "IOException: " + e);
                 return false;
+            }
+            finally
+            {
+                conn.disconnect();
             }
 
             return true;
@@ -227,10 +250,10 @@ public class LoginActivity extends Activity
 
             if (success)
             {
-                finish();
+                //finish();
             } else
             {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                mPasswordView.setError(getString(R.string.error_invalid_password));
                 mPasswordView.requestFocus();
             }
         }
