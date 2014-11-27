@@ -251,3 +251,18 @@ Put simply this is what the server thinks its seeing and doing.
 * `login.html`, A login page to `POST` login's and `POST` new registrations.
 * `index.html`, The main page where all other operations occur.
 * `admin.html`, A possible admin page which allows admins to use tools in the API. 
+
+Test Data
+========
+Users
+--------
+Format is `Name : Password`
+Admin privilege enabled.
+Admin : BananaPeppers
+
+Crud Bonemeal : Protein
+SomeDude : Garbage
+Phillabuster : Freaks812
+Tester : Dijkstra
+Lurker : NoPost	
+	
