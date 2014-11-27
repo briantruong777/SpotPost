@@ -14,7 +14,6 @@ public class MapsActivity extends FragmentActivity
     private static final String TAG = "MapsActivity";
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-    private ServerConnect serverConnect;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -72,25 +71,5 @@ public class MapsActivity extends FragmentActivity
     {
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
         mMap.setMyLocationEnabled(true);
-    }
-
-    /**
-     * Called by serverConnect to indicate login has completed
-     *
-     * @param success true if login was successful
-     */
-    void onLogin(boolean success)
-    {
-        Log.d(TAG, "result of login: success = " + success);
-    }
-
-    /**
-     * Called by serverConnect to indicate logout has completed
-     *
-     * @param success true if logout was successful
-     */
-    void onLogout(boolean success)
-    {
-        Log.d(TAG, "result of logout: success = " + success);
     }
 }
