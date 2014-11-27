@@ -36,6 +36,8 @@ from logging import FileHandler
 file_handler = FileHandler("spotpost_log")
 file_handler.setLevel(logging.WARNING)
 app.logger.addHandler(file_handler)
+# how to log manually:
+#   app.logger.warning("%s", "hello!")
 
 
 ###
