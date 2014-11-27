@@ -258,10 +258,10 @@ Users
 --------
 Format is `Name : Password`
 Admin privilege enabled.
-* Admin : BananaPeppers
-* Crud Bonemeal : Protein
-* SomeDude : Garbage
-* Phillabuster : Freaks812
-* Tester : Dijkstra
-* Lurker : NoPost	
+* `Admin : BananaPeppers`
+* `Crud Bonemeal : Protein`
+* `SomeDude : Garbage`
+* `Phillabuster : Freaks812`
+* `Tester : Dijkstra`
+* `Lurker : NoPost`	
 	
