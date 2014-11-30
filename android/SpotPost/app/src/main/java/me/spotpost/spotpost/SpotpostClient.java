@@ -12,6 +12,7 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
+import com.loopj.android.http.SyncHttpClient;
 
 import java.io.UnsupportedEncodingException;
 
@@ -26,6 +27,7 @@ public class SpotpostClient
 
     private static Context context = null;
     private static AsyncHttpClient client = new AsyncHttpClient();
+    private static SyncHttpClient synClient = new SyncHttpClient();
     private static PersistentCookieStore cookieStore = null;
 
     /**
@@ -36,6 +38,15 @@ public class SpotpostClient
         context = pContext;
         cookieStore = new PersistentCookieStore(context);
         client.setCookieStore(cookieStore);
+    }
+
+
+    /**
+     * Returns true if logged in currently.
+     */
+    public static void isLoggedIn(AsyncHttpResponseHandler handler)
+    {
+        get("_userstatus", null, handler);
     }
 
     /**
@@ -74,6 +85,13 @@ public class SpotpostClient
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler handler)
     {
         client.get(BASE_URL+url, params, handler);
+    }
+    /**
+     * Makes a synchronous get request
+     */
+    public static void synGet(String url, RequestParams params, AsyncHttpResponseHandler handler)
+    {
+        synClient.get(BASE_URL+url, params, handler);
     }
     /**
      * Makes a generic post request with given parameters
