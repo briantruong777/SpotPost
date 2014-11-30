@@ -399,6 +399,20 @@ def promote_user(username):
 
 ###
 #
+# Quick debugging fix to check if there is a user or not.
+#
+###
+@app.route('/_userstatus')
+def is_logged_in():
+	json_response = {}
+	if 'username' in session:
+		json_response = {"status" : "Currently logged in as " + session['username']}
+	else:
+		json_response = {"status" : "Not logged in"}
+	return json.dumps(json_response)
+
+###
+#
 #	Logs the user out.
 #
 ###
