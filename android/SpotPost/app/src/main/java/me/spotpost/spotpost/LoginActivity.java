@@ -6,27 +6,22 @@ import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import com.loopj.android.http.JsonHttpResponseHandler;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 /**
@@ -36,9 +31,7 @@ public class LoginActivity extends Activity
 {
     private static final String TAG = "LoginActivity";
 
-    private UserLoginTask mAuthTask = null;
-
-    private AutoCompleteTextView mUsernameView;
+    private EditText mUsernameView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
@@ -49,7 +42,7 @@ public class LoginActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        mUsernameView = (AutoCompleteTextView) findViewById(R.id.username);
+        mUsernameView = (EditText) findViewById(R.id.username);
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener()
@@ -87,11 +80,6 @@ public class LoginActivity extends Activity
      */
     public void attemptLogin()
     {
-        if (mAuthTask != null)
-        {
-            return;
-        }
-
         // Reset errors.
         mUsernameView.setError(null);
         mPasswordView.setError(null);
@@ -129,17 +117,40 @@ public class LoginActivity extends Activity
         {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            showProgress(true);
             ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
             if (networkInfo != null && networkInfo.isConnected())
             {
-                mAuthTask = new UserLoginTask(email, password);
-                mAuthTask.execute((Void) null);
+                SpotpostClient.login(email, password, new JsonHttpResponseHandler()
+                {
+                    @Override
+                    public void onStart()
+                    {
+                        showProgress(true);
+                    }
+
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONObject response)
+                    {
+                        try
+                        {
+                            Log.d(TAG, "JSON Response: " + response.toString(2));
+                        }
+                        catch (JSONException e)
+                        {
+                            Log.d(TAG, "Recieved invalid JSON: " + e);
+                        }
+                    }
+
+                    @Override
+                    public void onFinish ()
+                    {
+                        showProgress(false);
+                    }
+                });
             }
             else
             {
-                showProgress(false);
                 Log.d(TAG, "network is not active");
             }
         }
@@ -173,97 +184,6 @@ public class LoginActivity extends Activity
                 mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
             }
         });
-    }
-
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean>
-    {
-        private final String mEmail;
-        private final String mPassword;
-
-        UserLoginTask(String email, String password)
-        {
-            mEmail = email;
-            mPassword = password;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params)
-        {
-            URL url = null;
-            HttpURLConnection conn = null;
-
-            try
-            {
-                url = new URL("http://spotpost.me/login");
-                //url = new URL("http://www.google.com/about/careers");
-            }
-            catch (MalformedURLException e)
-            {
-                Log.d(TAG, "URL Exception: " + e);
-            }
-
-            try
-            {
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setReadTimeout(10000);
-                conn.setConnectTimeout(15000);
-
-                conn.setDoOutput(true);
-                byte[] temp = "{\"username\":\"admin\",\"password\":\"BananaPepper\"}".getBytes();
-                conn.setFixedLengthStreamingMode(temp.length);
-                //conn.setChunkedStreamingMode(0);
-
-                OutputStream out = new BufferedOutputStream(conn.getOutputStream());
-                out.write(temp);
-                out.close();
-
-                Log.d(TAG, Integer.toString(conn.getResponseCode()));
-
-                InputStream in = new BufferedInputStream(conn.getInputStream());
-                byte[] inData = new byte[1000];
-                in.read(inData);
-                Log.d(TAG, "Received: " + new String(inData));
-            }
-            catch (IOException e)
-            {
-                Log.d(TAG, "IOException: " + e);
-                return false;
-            }
-            finally
-            {
-                conn.disconnect();
-            }
-
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success)
-        {
-            mAuthTask = null;
-            showProgress(false);
-
-            if (success)
-            {
-                //finish();
-            } else
-            {
-                mPasswordView.setError(getString(R.string.error_invalid_password));
-                mPasswordView.requestFocus();
-            }
-        }
-
-        @Override
-        protected void onCancelled()
-        {
-            mAuthTask = null;
-            showProgress(false);
-        }
     }
 }
 
