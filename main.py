@@ -404,13 +404,14 @@ def promote_user(username):
 ###
 @app.route('/_userstatus')
 def is_logged_in():
-	error_dict['error'] = {}
+	data = {}
 	if 'username' in session:
-		error_dict['error'] = {"code" : "1000", "message" : "Success. Logged in as " + session['username'] + "."}
+		data = manager.get_user(session['username'])
+		data['error'] = {"code" : "1000", "message" : "Success."}
 	else:
-		error_dict['error'] = {"code" : "1087", "message" : "Not logged in."}
+		data['error'] = {"code" : "1087", "message" : "Not logged in."}
 
-	return json.dumps(error_dict)
+	return json.dumps(data)
 
 ###
 #
