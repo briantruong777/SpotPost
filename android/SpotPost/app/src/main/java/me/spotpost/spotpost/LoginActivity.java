@@ -74,6 +74,14 @@ public class LoginActivity extends Activity
 
         mLoginFormView = findViewById(R.id.login_form);
 
+        setupProgressBar();
+    }
+
+    /**
+     * Sets up progress bar
+     */
+    private void setupProgressBar()
+    {
         // create new ProgressBar and style it
         final ProgressBar progressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         progressBar.setLayoutParams(new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, 36));
@@ -96,7 +104,7 @@ public class LoginActivity extends Activity
             @Override
             public void onGlobalLayout() {
                 View contentView = decorView.findViewById(android.R.id.content);
-                progressBar.setY(contentView.getY() - 20);
+                progressBar.setY(contentView.getY() - 25);
 
                 ViewTreeObserver observer = progressBar.getViewTreeObserver();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
@@ -167,6 +175,17 @@ public class LoginActivity extends Activity
                         try
                         {
                             Log.d(TAG, "JSON Response: " + response.toString(2));
+
+                            if (response.getInt("code") == 1000)
+                            {
+                                // Success logging in
+                                finish();
+                            }
+                            else
+                            {
+                                Log.d(TAG, "Failed to login");
+                                mPasswordView.setError(getString(R.string.error_invalid_password));
+                            }
                         }
                         catch (JSONException e)
                         {

@@ -22,18 +22,20 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name="me.spotpost.spotpost.MapsActivity"
-            android:label="@string/title_activity_maps" >
-        </activity>
-        <activity
-            android:name="me.spotpost.spotpost.LoginActivity"
-            android:label="@string/title_activity_login"
-            android:windowSoftInputMode="adjustResize|stateVisible" >
+            android:name="me.spotpost.spotpost.MapsActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name="me.spotpost.spotpost.LoginActivity"
+            android:windowSoftInputMode="adjustResize|stateVisible" >
+            android:parentActivityName="me.spotpost.spotpost.MapsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="me.spotpost.spotpost.MapsActivity" />
         </activity>
     </application>
 

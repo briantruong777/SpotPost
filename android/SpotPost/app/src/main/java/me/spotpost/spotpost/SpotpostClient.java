@@ -31,7 +31,7 @@ public class SpotpostClient
     private static PersistentCookieStore cookieStore = null;
 
     /**
-     * Sets up this static class. Should be called between switching of activities (I think).
+     * Sets up this static class. Should probably be called once during lifetime of app.
      */
     public static void setup(Context pContext)
     {
@@ -42,7 +42,7 @@ public class SpotpostClient
 
 
     /**
-     * Returns true if logged in currently.
+     * Checks if logged in already or not
      */
     public static void isLoggedIn(AsyncHttpResponseHandler handler)
     {
