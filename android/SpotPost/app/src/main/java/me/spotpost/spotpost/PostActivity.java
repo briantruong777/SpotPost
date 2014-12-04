@@ -3,6 +3,7 @@ package me.spotpost.spotpost;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -128,7 +129,10 @@ public class PostActivity extends Activity
             NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
             if (networkInfo != null && networkInfo.isConnected())
             {
-                SpotpostClient.postSpotPosts(title, content, 40.113803, -88.224905, new JsonHttpResponseHandler()
+                Intent intent = getIntent();
+                double lat = intent.getDoubleExtra(MapsActivity.EXTRA_LATITUDE, 0);
+                double lng = intent.getDoubleExtra(MapsActivity.EXTRA_LONGITUDE, 0);
+                SpotpostClient.postSpotPosts(title, content, lat, lng, new JsonHttpResponseHandler()
                 {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject response)
@@ -136,7 +140,15 @@ public class PostActivity extends Activity
                         try
                         {
                             Log.d(TAG, "JSON Response: " + response.toString(2));
-                            finish();
+                            if (response.getJSONObject("error").getInt("code") == 1000)
+                            {
+                                Log.d(TAG, "Successfully made SpotPost!");
+                                finish();
+                            }
+                            else
+                            {
+                                Log.d(TAG, "Unable to post Spotpost");
+                            }
                         }
                         catch (JSONException e)
                         {
