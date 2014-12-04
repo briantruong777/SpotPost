@@ -257,8 +257,11 @@ class DBManager:
 		title 		= form['title']
 		latitude 	= form['latitude']
 		longitude 	= form['longitude']
-		reputation 	= form['reputation']
-		
+		if 'reputation' in form.keys():
+			reputation 	= form['reputation']
+		else
+			reputation = None
+				
 		if form['username']:
 			client_username = form['username']
 
