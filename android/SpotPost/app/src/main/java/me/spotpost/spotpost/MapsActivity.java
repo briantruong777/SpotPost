@@ -113,6 +113,13 @@ public class MapsActivity extends FragmentActivity
             }
 
             @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
+            {
+                Log.d(TAG, "Login Check HTTP Failure: " + responseString, error);
+                Log.d(TAG, "Couldn't determine login state");
+            }
+
+            @Override
             public void onFinish ()
             {
                 mProgressView.setVisibility(View.INVISIBLE);
