@@ -8,11 +8,14 @@ var xhr = require('../utils/xhr');
 
 // local fields HERE
 
+var _getSpotPostsState = function() {
+  return {};
+};
+
 var SpotPostsStore = merge(EventEmitter.prototype, {
 
   getState: function() {
-    return {
-    };
+    return _getSpotPostsState();
   },
 
   emitChange: function() {
