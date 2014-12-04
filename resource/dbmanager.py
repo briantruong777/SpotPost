@@ -11,12 +11,37 @@
 '	@author Adam Davis
 ' 
 '''
+
 import sqlite3
+#Need to use log10.
+import math
 from passlib.hash 	import sha256_crypt
 from unidecode 		import unidecode
 
 connect = sqlite3.connect('data.db')
 cursor = connect.cursor()
+
+###
+#
+# Gets the sign of the rating for scoring purposes.
+# 
+# @param rating = rating whose sign is to be determined.
+# @return 1 if positive, -1 if negative, 0 if neither.
+#
+###
+def score_sign(rating):
+	return 1 if rating > 0 else -1 if rating < 0 else 0
+
+###
+#
+# Returns the log10 of a score in the database.
+# Added as a function in the database. Minimum rating being 1.
+# 
+# @param rating = rating to be used for score generation.
+# @return log10 of either 1 or rating, whichever is higher.
+###
+def log_score(rating):
+	return math.log10(max(rating , 1))
 
 ###
 #
@@ -91,25 +116,29 @@ def store_hash_pass(username, password):
 class DBManager:
 	###
 	#
+	# Drops all tables.
+	#
+	###
+	def drop_tables(self):
+		cursor.execute("DROP TABLE SpotPosts")
+		cursor.execute("DROP TABLE SpotPostComments")
+		cursor.execute("DROP TABLE Users")
+		cursor.execute("DROP TABLE Follows")
+		cursor.execute("DROP TABLE Photos")
+		cursor.execute("DROP TABLE Rates")
+		cursor.execute("DROP TABLE Unlocks")
+
+		connect.commit()
+
+	###
+	#
 	# Closes the connection, used when closing the server.
 	#
 	###
 	def close_connection(self):
 		connect.close()
-	###
-	#	
-	#	Initializes the Database by creating each table. Below are the tables in relational format.
-	#
-	#	SpotPosts(id, content, title, reputation, longitude, latitude, username, time)
-	#	SpotPostComments(id, message_id, content, user_id, time)
-	#	Users(username, password, profile_pic_id, reputation)
-	#	Follows(follower_name, followee_name)
-	#	Photos(id, photo)
-	#	Rates(username, spotpost_id)
-	#	Unlocks(username, spotpost_id)
-	#
-	###
-	def __init__(self):
+
+	def create_tables(self):
 		#SpotPosts(id, content, photo_id, reputation, longitude, latitude, visibility, user_id, time)
 		cursor.execute("CREATE TABLE IF NOT EXISTS SpotPosts(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, content TEXT, title TEXT," + 
 			"reputation INTEGER DEFAULT 0, longitude REAL NOT NULL, latitude REAL NOT NULL," + 
@@ -135,6 +164,26 @@ class DBManager:
 
 		#Unlocks(username, spotpost_id)
 		cursor.execute("CREATE TABLE IF NOT EXISTS Unlocks(username TEXT, spotpost_id INTEGER)")
+
+	###
+	#	
+	#	Initializes the Database by creating each table. Below are the tables in relational format.
+	#
+	#	SpotPosts(id, content, title, reputation, longitude, latitude, username, time)
+	#	SpotPostComments(id, message_id, content, user_id, time)
+	#	Users(username, password, profile_pic_id, reputation)
+	#	Follows(follower_name, followee_name)
+	#	Photos(id, photo)
+	#	Rates(username, spotpost_id)
+	#	Unlocks(username, spotpost_id)
+	#
+	###
+	def __init__(self):
+		self.create_tables()
+
+		#Creates the functions we need for the scoring algorithm
+		connect.create_function("log", 1, log_score)
+		connect.create_function("sign", 1, score_sign)
 
 	###
 	#
@@ -206,8 +255,8 @@ class DBManager:
 	def insert_spotpost(self, form, client_username):
 		content 	= form['content']
 		title 		= form['title']
-		longitude 	= form['latitude']
-		latitude 	= form['longitude']
+		latitude 	= form['latitude']
+		longitude 	= form['longitude']
 		reputation 	= form['reputation']
 		
 		if form['username']:
@@ -219,7 +268,7 @@ class DBManager:
 			cursor.execute("INSERT INTO SpotPosts(content, title, longitude, latitude, username) VALUES (?,?,?,?,?)", (content, title, longitude, latitude, client_username))
 
 		connect.commit()
-		return {"error": {"code": 1000, "message" : "Success."}}
+		return {"error": {"code": "1000", "message" : "Success."}}
 
 	###
 	#
@@ -237,9 +286,11 @@ class DBManager:
 		if not exists:
 			store_hash_pass(username, password)
 		else:
-			return "ERROR USERNAME ALREADY IN USE"
+			error_dict = {"code" : "1055", "message" : "Username already in use."}
+			return error_dict
 
-		return "SUCCESS"		
+		error_dict = {"code" : "1000" , "message" : "Success."}
+		return error_dict		
 
 	###
 	#
@@ -278,13 +329,60 @@ class DBManager:
 	# @param username = username of followee
 	#
 	###
-	def get_list_of_followers(username):
+	def get_list_of_followers(self, username):
 		cursor.execute("SELECT * FROM Follows WHERE followee_name = ?", (username,))
 		rawdata = cursor.fetchall()
 		data = []
 
 		for row in rawdata:
 			data.append(rawdata[0])
+
+		return data
+
+	###
+	#
+	# Gets the top `top_count` posts in an area surrounded by the 4 location variables.
+	#
+	# @param min_latitude = minimum latitude to search inside.
+	# @param max_latitude = maximum latitude to search inside.
+	# @param min_longitude = minimum longitude to search inside.
+	# @param max_longitude = maximum longitude to search inside.
+	# @param top_count = number of posts to return.
+	#####
+	## Taken from http://amix.dk/blog/post/19588. Reddit's algorithm for determining scores.
+	#### 
+	#	Equation: 
+	#	s = score(ups, downs)
+    #	order = log(max(abs(s), 1), 10)
+    #	sign = 1 if s > 0 else -1 if s < 0 else 0
+    #	seconds = epoch_seconds(date) - 1134028003
+    #	return round(order + sign * seconds / 45000, 7)
+	###
+	def location_search_spotpost(self, min_latitude, max_latitude, min_longitude, max_longitude, top_count):
+		#Time in seconds since 1/1/1970 to be used as a starting time, This is December 8 2005. Its what reddit uses so, when in rome.
+		start_time = 1134028003
+
+		equation = "(round(log(reputation) + sign(reputation) * (strftime('%s',time) - ?)/45000.0, 7))"
+		query = "SELECT *, " + equation + " AS score FROM SpotPosts WHERE latitude <= ? AND latitude >= ? AND longitude >= ? AND longitude <= ? ORDER BY score DESC LIMIT ?"
+		query_data = (start_time, max_latitude, min_latitude, min_longitude, max_longitude, top_count)
+
+		cursor.execute(query, query_data)
+		rawdata = cursor.fetchall()
+		data = []
+		for row in rawdata:
+		#SpotPosts(id, content, reputation, longitude, latitude, user_id, time)
+			data_dict 				= {}
+			data_dict['id'] 		= row[0]
+			data_dict['content'] 	= unidecode(row[1])
+			data_dict['title']		= unidecode(row[2])
+			data_dict['reputation'] = row[3]
+			data_dict['longitude']	= row[4]
+			data_dict['latitude'] 	= row[5]
+			data_dict['user'] 		= build_username_JSON(unidecode(row[6]))
+			data_dict['time'] 		= unidecode(row[7])
+			data_dict['comments'] 	= build_comments_JSON(row[0])
+
+			data.append(data_dict)
 
 		return data
 
@@ -305,8 +403,7 @@ class DBManager:
 	# URL?/&lock_value  = Lock status of spotposts. (0 = All posts locked or unlocked, 1 = All locked posts, 2 = All unlocked posts).
 	#
 	###
-	def select_spotpost(self, min_reputation, max_reputation, username, post_id, min_latitude, 
-						max_latitude, min_longitude, max_longitude, radius, is_area_search, lock_value):
+	def select_spotpost(self, min_reputation, max_reputation, username, post_id, lock_value):
 		query = "SELECT * FROM SpotPosts"
 		query_data = ()
 		where_query = False
@@ -322,14 +419,6 @@ class DBManager:
 			query = query + " WHERE id = ?"
 			query_data = query_data + (post_id,)
 			where_query = True
-		if is_area_search:
-			if not where_query:
-				query 		= query + " WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
-				query_data 	= query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
-				where_query = True
-			else:
-				query 		= query + " AND latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ?"
-				query_data 	= query_data + (max_latitude, min_latitude, max_longitude, min_longitude)
 		if username:
 			if not where_query:
 				query 		= query + " WHERE username = ?"
@@ -411,9 +500,18 @@ class DBManager:
 	#
 	###
 	def update_privilege(self, username, newpriv):
-		cursor.execute("UPDATE Users SET privilege = ? WHERE username = ?", (newpriv, username))
+		error_dict = {}
+		cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
+		data = cursor.fetchall()
+		if data:
+			cursor.execute("UPDATE Users SET privilege = ? WHERE username = ?", (newpriv, username))
+			error_dict['error'] = {"code": "1000", "message" : "Success."}
+		else:
+			error_dict['error'] = {"code" : "9110", "message" : "User does not exist."}
+
 		connect.commit()
 
+		return error_dict
 
 	###
 	#
