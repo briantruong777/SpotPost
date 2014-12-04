@@ -128,10 +128,16 @@ public class MapsActivity extends FragmentActivity
             }
 
             @Override
-            public void onProviderEnabled(String provider) {}
+            public void onProviderEnabled(String provider)
+            {
+                Log.d(TAG, "LocationProvider enabled");
+            }
 
             @Override
-            public void onProviderDisabled(String provider) {}
+            public void onProviderDisabled(String provider)
+            {
+                Log.d(TAG, "LocationProvider disabled");
+            }
         };
     }
 
