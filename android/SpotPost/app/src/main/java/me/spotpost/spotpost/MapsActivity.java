@@ -1,16 +1,26 @@
 package me.spotpost.spotpost;
 
 import android.app.ActionBar;
+import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -18,6 +28,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.apache.http.Header;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,97 +38,23 @@ public class MapsActivity extends FragmentActivity
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private View mProgressView;
+    private LocationManager mLocManage;
+    private LocationListener mLocListen;
+    private double mLat;
+    private double mLng;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        setUpMapIfNeeded();
 
-        setupProgressBar();
+        setUpMapIfNeeded();
+        mProgressView = setupProgressBar();
+        mLocManage = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        setupMapLoc();
+        mLocListen = setupLocListen();
         SpotpostClient.setup(this);
-    }
-
-    private void setupProgressBar()
-    {
-        // create new ProgressBar and style it
-        final ProgressBar progressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        progressBar.setLayoutParams(new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, 36));
-        progressBar.setIndeterminate(true);
-        progressBar.setVisibility(View.INVISIBLE);
-        mProgressView = progressBar;
-
-        // retrieve the top view of our application
-        final FrameLayout decorView = (FrameLayout) getWindow().getDecorView();
-        decorView.addView(progressBar);
-
-        // Here we try to position the ProgressBar to the correct position by looking
-        // at the position where content area starts. But during creating time, sizes
-        // of the components are not set yet, so we have to wait until the components
-        // has been laid out
-        // Also note that doing progressBar.setY(136) will not work, because of different
-        // screen densities and different sizes of actionBar
-        ViewTreeObserver observer = progressBar.getViewTreeObserver();
-        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                View contentView = decorView.findViewById(android.R.id.content);
-                progressBar.setY(contentView.getY() - 25);
-
-                ViewTreeObserver observer = progressBar.getViewTreeObserver();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-                    observer.removeOnGlobalLayoutListener(this);
-                else
-                    observer.removeGlobalOnLayoutListener(this);
-            }
-        });
-    }
-
-    @Override
-    protected void onResume()
-    {
-        super.onResume();
-        setUpMapIfNeeded();
-        SpotpostClient.isLoggedIn(new JsonHttpResponseHandler()
-        {
-            @Override
-            public void onStart()
-            {
-                mProgressView.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response)
-            {
-                try
-                {
-                    Log.d(TAG, "JSON Response: " + response.toString(2));
-
-                    if (response.getJSONObject("error").getInt("code") != 1000)
-                    {
-                        Intent intent = new Intent(MapsActivity.this, LoginActivity.class);
-                        MapsActivity.this.startActivity(intent);
-                    }
-                    else
-                    {
-                        Log.d(TAG, "User is already logged in");
-                    }
-                }
-                catch (JSONException e)
-                {
-                    Log.d(TAG, "JSON Exception: " + e);
-                    Log.d(TAG, "Couldn't determine login state");
-                    return;
-                }
-            }
-
-            @Override
-            public void onFinish ()
-            {
-                mProgressView.setVisibility(View.INVISIBLE);
-            }
-        });
     }
 
     /**
@@ -161,5 +98,232 @@ public class MapsActivity extends FragmentActivity
     {
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
         mMap.setMyLocationEnabled(true);
+    }
+
+    private View setupProgressBar()
+    {
+        // create new ProgressBar and style it
+        final ProgressBar progressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        progressBar.setLayoutParams(new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, 36));
+        progressBar.setIndeterminate(true);
+        progressBar.setVisibility(View.INVISIBLE);
+
+        // retrieve the top view of our application
+        final FrameLayout decorView = (FrameLayout) getWindow().getDecorView();
+        decorView.addView(progressBar);
+
+        // Here we try to position the ProgressBar to the correct position by looking
+        // at the position where content area starts. But during creating time, sizes
+        // of the components are not set yet, so we have to wait until the components
+        // has been laid out
+        // Also note that doing progressBar.setY(136) will not work, because of different
+        // screen densities and different sizes of actionBar
+        ViewTreeObserver observer = progressBar.getViewTreeObserver();
+        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                View contentView = decorView.findViewById(android.R.id.content);
+                progressBar.setY(contentView.getY() - 25);
+
+                ViewTreeObserver observer = progressBar.getViewTreeObserver();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
+                    observer.removeOnGlobalLayoutListener(this);
+                else
+                    observer.removeGlobalOnLayoutListener(this);
+            }
+        });
+
+        return progressBar;
+    }
+
+    private void setupMapLoc()
+    {
+        Location loc = mLocManage.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        mLat = loc.getLatitude();
+        mLng = loc.getLongitude();
+        LatLng latLng = new LatLng(mLat, mLng);
+        Log.d(TAG, "Init location: " + latLng);
+        CameraUpdate camUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 16.0f);
+        mMap.moveCamera(camUpdate);
+    }
+
+    private LocationListener setupLocListen()
+    {
+        return new LocationListener()
+        {
+            @Override
+            public void onLocationChanged(Location location)
+            {
+                mLat = location.getLatitude();
+                mLng = location.getLongitude();
+                LatLng latLng = new LatLng(mLat, mLng);
+                CameraUpdate camUpdate = CameraUpdateFactory.newLatLng(latLng);
+                mMap.animateCamera(camUpdate);
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras)
+            {
+                String mes = "LocationProvider reports status: ";
+                switch (status)
+                {
+                    case LocationProvider.AVAILABLE:
+                        mes += "available";
+                        break;
+                    case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                        mes += "temporarily unavailable";
+                        break;
+                    case LocationProvider.OUT_OF_SERVICE:
+                        mes += "out of service";
+                        break;
+                }
+                Log.d(TAG, mes);
+            }
+
+            @Override
+            public void onProviderEnabled(String provider)
+            {
+                Log.d(TAG, "LocationProvider enabled");
+            }
+
+            @Override
+            public void onProviderDisabled(String provider)
+            {
+                Log.d(TAG, "LocationProvider disabled");
+            }
+        };
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        setUpMapIfNeeded();
+        mLocManage.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocListen);
+        SpotpostClient.isLoggedIn(new JsonHttpResponseHandler()
+        {
+            @Override
+            public void onStart()
+            {
+                mProgressView.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response)
+            {
+                try
+                {
+                    Log.d(TAG, "JSON Response:\n" + response.toString(2));
+
+                    if (response.getJSONObject("error").getInt("code") != 1000)
+                    {
+                        Intent intent = new Intent(MapsActivity.this, LoginActivity.class);
+                        MapsActivity.this.startActivity(intent);
+                    } else
+                    {
+                        Log.d(TAG, "User is already logged in");
+                    }
+                } catch (JSONException e)
+                {
+                    Log.d(TAG, "JSON Exception: " + e);
+                    Log.d(TAG, "Couldn't determine login state");
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
+            {
+                Log.d(TAG, "Login Check HTTP Failure: " + responseString, error);
+                Log.d(TAG, "Couldn't determine login state");
+            }
+
+            @Override
+            public void onFinish()
+            {
+                mProgressView.setVisibility(View.INVISIBLE);
+            }
+        });
+        getSpotPosts();
+    }
+
+    private void getSpotPosts()
+    {
+        SpotpostClient.getSpotPosts(mLat, mLng, new JsonHttpResponseHandler()
+        {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray response)
+            {
+                try
+                {
+                    Log.d(TAG, "Received SpotPost JSON:\n" + response.toString(2));
+                }
+                catch (JSONException e)
+                {
+                    Log.d(TAG, "JSON Exception: " + e);
+                    Log.d(TAG, "Couldn't get SpotPosts");
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable error, JSONObject obj)
+            {
+                Log.d(TAG, "Get SpotPosts HTTP Failure: " + statusCode, error);
+                try
+                {
+                    if (obj != null)
+                        Log.d(TAG, "JSON Object Received:\n" + obj.toString(2));
+                }
+                catch (JSONException e)
+                {
+                    Log.d(TAG, "JSON Exception " + e);
+                }
+                Log.d(TAG, "Couldn't get SpotPosts");
+            }
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
+            {
+                Log.d(TAG, "Get SpotPosts HTTP Failure: " + responseString, error);
+                Log.d(TAG, "Couldn't get SpotPosts");
+            }
+
+            @Override
+            public void onStart()
+            {
+                mProgressView.setVisibility(View.VISIBLE);
+            }
+            @Override
+            public void onFinish ()
+            {
+                mProgressView.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        mLocManage.removeUpdates(mLocListen);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_maps, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
+            case R.id.action_get_spotposts:
+                getSpotPosts();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }

@@ -194,6 +194,13 @@ public class LoginActivity extends Activity
                     }
 
                     @Override
+                    public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
+                    {
+                        Log.d(TAG, "Login HTTP Failure: " + responseString, error);
+                        mPasswordView.setError(getString(R.string.error_invalid_password));
+                    }
+
+                    @Override
                     public void onFinish ()
                     {
                         showProgress(false);
@@ -202,6 +209,7 @@ public class LoginActivity extends Activity
             }
             else
             {
+                //TODO Say more about this
                 Log.d(TAG, "network is not active");
             }
         }
