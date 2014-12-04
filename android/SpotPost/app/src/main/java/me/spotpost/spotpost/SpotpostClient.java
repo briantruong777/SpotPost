@@ -87,7 +87,8 @@ public class SpotpostClient
         RequestParams params = new RequestParams();
         params.put("latitude", lat);
         params.put("longitude", lng);
-        client.get("spotpost/_getlocation", params, handler);
+        Log.d(TAG, "params: " + params.toString());
+        get("spotpost/_getlocation", params, handler);
     }
 
     /**
