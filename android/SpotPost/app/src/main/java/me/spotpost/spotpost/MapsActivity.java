@@ -1,7 +1,12 @@
 package me.spotpost.spotpost;
 
 import android.app.ActionBar;
+import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -11,6 +16,8 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -27,26 +34,30 @@ public class MapsActivity extends FragmentActivity
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private View mProgressView;
+    private LocationManager mLocManage;
+    private LocationListener mLocListen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        setUpMapIfNeeded();
 
-        setupProgressBar();
+        setUpMapIfNeeded();
+        mProgressView = setupProgressBar();
+        mLocManage = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        setupMapLoc();
+        mLocListen = setupLocListen();
         SpotpostClient.setup(this);
     }
 
-    private void setupProgressBar()
+    private View setupProgressBar()
     {
         // create new ProgressBar and style it
         final ProgressBar progressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         progressBar.setLayoutParams(new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, 36));
         progressBar.setIndeterminate(true);
         progressBar.setVisibility(View.INVISIBLE);
-        mProgressView = progressBar;
 
         // retrieve the top view of our application
         final FrameLayout decorView = (FrameLayout) getWindow().getDecorView();
@@ -72,6 +83,56 @@ public class MapsActivity extends FragmentActivity
                     observer.removeGlobalOnLayoutListener(this);
             }
         });
+
+        return progressBar;
+    }
+
+    private void setupMapLoc()
+    {
+        Location loc = mLocManage.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        LatLng latLng = new LatLng(loc.getLatitude(), loc.getLongitude());
+        Log.d(TAG, "Init location: " + latLng);
+        CameraUpdate camUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 16.0f);
+        mMap.moveCamera(camUpdate);
+    }
+
+    private LocationListener setupLocListen()
+    {
+        return new LocationListener()
+        {
+            @Override
+            public void onLocationChanged(Location location)
+            {
+                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                CameraUpdate camUpdate = CameraUpdateFactory.newLatLng(latLng);
+                mMap.animateCamera(camUpdate);
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras)
+            {
+                String mes = "LocationProvider reports status: ";
+                switch (status)
+                {
+                    case LocationProvider.AVAILABLE:
+                        mes += "available";
+                        break;
+                    case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                        mes += "temporarily unavailable";
+                        break;
+                    case LocationProvider.OUT_OF_SERVICE:
+                        mes += "out of service";
+                        break;
+                }
+                Log.d(TAG, mes);
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {}
+
+            @Override
+            public void onProviderDisabled(String provider) {}
+        };
     }
 
     @Override
@@ -79,6 +140,7 @@ public class MapsActivity extends FragmentActivity
     {
         super.onResume();
         setUpMapIfNeeded();
+        mLocManage.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocListen);
         SpotpostClient.isLoggedIn(new JsonHttpResponseHandler()
         {
             @Override
@@ -125,6 +187,13 @@ public class MapsActivity extends FragmentActivity
                 mProgressView.setVisibility(View.INVISIBLE);
             }
         });
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        mLocManage.removeUpdates(mLocListen);
     }
 
     /**
