@@ -92,6 +92,38 @@ public class SpotpostClient
     }
 
     /**
+     * Post a SpotPost
+     */
+    public static void postSpotPosts(String title, String content, double lat, double lng, AsyncHttpResponseHandler handler)
+    {
+        JSONObject json = new JSONObject();
+        try
+        {
+            json.put("title", title);
+            json.put("content", content);
+            json.put("latitude", lat);
+            json.put("longitude", lng);
+        }
+        catch (JSONException e)
+        {
+            Log.d(TAG, "Unable to construct JSON: " + e);
+            return;
+        }
+
+        StringEntity entity = null;
+        try
+        {
+            entity = new StringEntity(json.toString());
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            Log.d(TAG, "Unable to create StringEntity: " + e);
+        }
+
+        post("login", entity, JSON_APP, handler);
+    }
+
+    /**
      * Makes a generic get request with given parameters
      */
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler handler)
