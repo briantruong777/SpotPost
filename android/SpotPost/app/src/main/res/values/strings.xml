@@ -4,5 +4,11 @@
     <string name="app_name">SpotPost</string>
     <string name="title_activity_maps">Map</string>
     <string name="action_get_spotposts">Get SpotPosts</string>
+    <string name="title_activity_post">PostActivity</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="prompt_title">Title</string>
+    <string name="prompt_content">Content</string>
+    <string name="action_post_btn">Post It!</string>
 
 </resources>

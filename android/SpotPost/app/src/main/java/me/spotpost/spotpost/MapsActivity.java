@@ -322,6 +322,10 @@ public class MapsActivity extends FragmentActivity
             case R.id.action_get_spotposts:
                 getSpotPosts();
                 return true;
+            case R.id.action_post_spotpost:
+                Intent intent = new Intent(this, PostActivity.class);
+                startActivity(intent);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
