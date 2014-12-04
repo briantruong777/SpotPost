@@ -25,6 +25,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.apache.http.Header;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -36,6 +37,8 @@ public class MapsActivity extends FragmentActivity
     private View mProgressView;
     private LocationManager mLocManage;
     private LocationListener mLocListen;
+    private double mLat;
+    private double mLng;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -90,7 +93,9 @@ public class MapsActivity extends FragmentActivity
     private void setupMapLoc()
     {
         Location loc = mLocManage.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        LatLng latLng = new LatLng(loc.getLatitude(), loc.getLongitude());
+        mLat = loc.getLatitude();
+        mLng = loc.getLongitude();
+        LatLng latLng = new LatLng(mLat, mLng);
         Log.d(TAG, "Init location: " + latLng);
         CameraUpdate camUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 16.0f);
         mMap.moveCamera(camUpdate);
@@ -103,7 +108,9 @@ public class MapsActivity extends FragmentActivity
             @Override
             public void onLocationChanged(Location location)
             {
-                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                mLat = location.getLatitude();
+                mLng = location.getLongitude();
+                LatLng latLng = new LatLng(mLat, mLng);
                 CameraUpdate camUpdate = CameraUpdateFactory.newLatLng(latLng);
                 mMap.animateCamera(camUpdate);
             }
@@ -160,7 +167,7 @@ public class MapsActivity extends FragmentActivity
             {
                 try
                 {
-                    Log.d(TAG, "JSON Response: " + response.toString(2));
+                    Log.d(TAG, "JSON Response:\n" + response.toString(2));
 
                     if (response.getJSONObject("error").getInt("code") != 1000)
                     {
@@ -176,7 +183,6 @@ public class MapsActivity extends FragmentActivity
                 {
                     Log.d(TAG, "JSON Exception: " + e);
                     Log.d(TAG, "Couldn't determine login state");
-                    return;
                 }
             }
 
@@ -187,6 +193,40 @@ public class MapsActivity extends FragmentActivity
                 Log.d(TAG, "Couldn't determine login state");
             }
 
+            @Override
+            public void onFinish ()
+            {
+                mProgressView.setVisibility(View.INVISIBLE);
+            }
+        });
+        SpotpostClient.getSpotPosts(mLat, mLng, new JsonHttpResponseHandler()
+        {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray response)
+            {
+                try
+                {
+                    Log.d(TAG, "Received SpotPost JSON:\n" + response.toString(2));
+                }
+                catch (JSONException e)
+                {
+                    Log.d(TAG, "JSON Exception: " + e);
+                    Log.d(TAG, "Couldn't get SpotPosts");
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
+            {
+                Log.d(TAG, "Get SpotPosts HTTP Failure: " + responseString, error);
+                Log.d(TAG, "Couldn't get SpotPosts");
+            }
+
+            @Override
+            public void onStart()
+            {
+                mProgressView.setVisibility(View.VISIBLE);
+            }
             @Override
             public void onFinish ()
             {

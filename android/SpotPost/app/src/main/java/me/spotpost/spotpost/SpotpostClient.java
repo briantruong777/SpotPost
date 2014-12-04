@@ -80,6 +80,17 @@ public class SpotpostClient
     }
 
     /**
+     * Get nearby spotposts
+     */
+    public static void getSpotPosts(double lat, double lng, AsyncHttpResponseHandler handler)
+    {
+        RequestParams params = new RequestParams();
+        params.put("latitude", lat);
+        params.put("longitude", lng);
+        client.get("spotpost/_getlocation", params, handler);
+    }
+
+    /**
      * Makes a generic get request with given parameters
      */
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler handler)
