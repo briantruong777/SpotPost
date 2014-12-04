@@ -7,10 +7,10 @@ var SpotPost = require('./SpotPost.react');
 
 var SpotPosts = React.createClass({
 
-  var passInfo = {
+  passInfo: {
     editId: -1,
     isLoading: false
-  }
+  },
 
   _renderSpotPost: function(spotPost) {
     var edit = false;
