@@ -113,6 +113,7 @@ Server API
 7. Each Spotpost is constructed as follows.
 	* `id` 		  	: ID of Spotpost.
 	* `content`  	: Content of Spotpost.
+	* `title`       : Title of Spotpost.
 	* `reputation`  : Rating of Spotpost.
 	* `longitude`	: Longitude of Spotpost.
 	* `latitude`  	: Latitude of Spotpost.
@@ -148,6 +149,7 @@ Server API
 	* \* `longitude`: longitude position of SpotPost.
 	* `username`	: Username of user who posted the SpotPost. Default is the current logged in user.
 	* `reputation`	: Custom starting reputation of SpotPost. Default is 0.
+	* \* `title`       : Title of Spotpost.
 
 ### Updating Spotposts
 1. You must be logged in as an admin to update spotposts.
