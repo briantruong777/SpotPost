@@ -152,14 +152,22 @@ public class SpotpostClient
         post("spotpost/_post", entity, JSON_APP, handler);
     }
 
-    public static void upvote(int postId, AsyncHttpResponseHandler handler)
+    public static void upvoteSpotPost(int postId, AsyncHttpResponseHandler handler)
     {
         get("spotpost/_upvote/"+postId, null, handler);
     }
-
-    public static void downvote(int postId, AsyncHttpResponseHandler handler)
+    public static void downvoteSpotPost(int postId, AsyncHttpResponseHandler handler)
     {
         get("spotpost/_downvote/"+postId, null, handler);
+    }
+
+    public static void upvoteComment(int commentId, AsyncHttpResponseHandler handler)
+    {
+        get("comment/_upvote/"+commentId, null, handler);
+    }
+    public static void downvoteComment(int commentId, AsyncHttpResponseHandler handler)
+    {
+        get("comment/_downvote/"+commentId, null, handler);
     }
 
     /**

@@ -15,5 +15,6 @@
     <string name="post_view_user">User:</string>
     <string name="post_view_rep">Reputation:</string>
     <string name="force_unlock_btn">Force Unlock</string>
+    <string name="comment_str">Comments</string>
 
 </resources>

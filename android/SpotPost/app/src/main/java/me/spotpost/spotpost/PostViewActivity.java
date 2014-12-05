@@ -2,16 +2,23 @@ package me.spotpost.spotpost;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.Space;
 import android.widget.TextView;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -43,6 +50,8 @@ public class PostViewActivity extends Activity
     private ImageButton mDownButton;
     private Button mUnlockButton;
 
+    private LinearLayout mCommentLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -68,7 +77,7 @@ public class PostViewActivity extends Activity
             @Override
             public void onClick(View v)
             {
-                SpotpostClient.upvote(mPostId, new AsyncHttpResponseHandler()
+                SpotpostClient.upvoteSpotPost(mPostId, new AsyncHttpResponseHandler()
                 {
                     @Override
                     public void onSuccess(int i, Header[] headers, byte[] bytes)
@@ -92,7 +101,7 @@ public class PostViewActivity extends Activity
             @Override
             public void onClick(View v)
             {
-                SpotpostClient.downvote(mPostId, new AsyncHttpResponseHandler()
+                SpotpostClient.downvoteSpotPost(mPostId, new AsyncHttpResponseHandler()
                 {
                     @Override
                     public void onSuccess(int i, Header[] headers, byte[] bytes)
@@ -133,6 +142,8 @@ public class PostViewActivity extends Activity
             }
         });
 
+        mCommentLayout = (LinearLayout) findViewById(R.id.comment_layout);
+
         if (mUnlock)
         {
             SpotpostClient.unlockSpotPost(mPostId, new UnlockHandler());
@@ -153,14 +164,7 @@ public class PostViewActivity extends Activity
                 Log.d(TAG, "JSON Response:\n" + response.toString(2));
                 if (response.length() == 1)
                 {
-                    JSONObject post = response.getJSONObject(0);
-                    mTitleView.setText(post.getString("title"));
-                    mContentView.setText(post.getString("content"));
-                    mUserView.setText(post.getJSONObject("user").getString("username"));
-                    mRepView.setText(post.getString("reputation"));
-                    mTimeView.setText(post.getString("time"));
-                    mUpButton.setEnabled(true);
-                    mDownButton.setEnabled(true);
+                    setupViews(response);
                 }
                 else if (response.length() == 0)
                 {
@@ -214,14 +218,7 @@ public class PostViewActivity extends Activity
                 Log.d(TAG, "JSON Response:\n" + response.toString(2));
                 if (response.length() == 1)
                 {
-                    JSONObject post = response.getJSONObject(0);
-                    mTitleView.setText(post.getString("title"));
-                    mContentView.setText(post.getString("content"));
-                    mUserView.setText(post.getJSONObject("user").getString("username"));
-                    mRepView.setText(post.getString("reputation"));
-                    mTimeView.setText(post.getString("time"));
-                    mUpButton.setEnabled(true);
-                    mDownButton.setEnabled(true);
+                    setupViews(response);
 
                     mUnlockButton.setEnabled(false);
                 }
@@ -255,6 +252,128 @@ public class PostViewActivity extends Activity
             mProgressView.setVisibility(View.INVISIBLE);
         }
     }
+
+    private void setupViews(JSONArray response) throws JSONException
+    {
+        JSONObject post = response.getJSONObject(0);
+        mTitleView.setText(post.getString("title"));
+        mContentView.setText(post.getString("content"));
+        mUserView.setText(post.getJSONObject("user").getString("username"));
+        mRepView.setText(post.getString("reputation"));
+        mTimeView.setText(post.getString("time"));
+        mUpButton.setEnabled(true);
+        mDownButton.setEnabled(true);
+
+        mCommentLayout.removeAllViews();
+        JSONArray comments = post.getJSONArray("comments");
+        for (int i = 0; i < comments.length(); i++)
+        {
+            JSONObject comment = comments.getJSONObject(i);
+            String content = comment.getString("content");
+            String username = comment.getString("username");
+            String rep = comment.getString("reputation");
+            String time =  comment.getString("time");
+            mCommentLayout.addView(new CommentView(PostViewActivity.this, content, username, rep, time, comment.getInt("id")));
+        }
+    }
+
+    private class CommentView extends LinearLayout
+    {
+        int commentId;
+
+        public CommentView(Context context, String content, String username, String rep, String time, int id)
+        {
+            super(context);
+            commentId = id;
+
+            setOrientation(HORIZONTAL);
+            setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            ImageButton upvoteBtn = new ImageButton(context);
+            upvoteBtn.setOnClickListener(new CommentUpvoteListener());
+            upvoteBtn.setImageResource(R.drawable.ic_action_collapse);
+            upvoteBtn.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            TextView repView = new TextView(context);
+            repView.setText(rep);
+            repView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            repView.setGravity(Gravity.CENTER);
+
+            ImageButton downvoteBtn = new ImageButton(context);
+            downvoteBtn.setOnClickListener(new CommentDownvoteListener());
+            downvoteBtn.setImageResource(R.drawable.ic_action_expand);
+            downvoteBtn.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            LinearLayout voteLayout = new LinearLayout(context);
+            voteLayout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            voteLayout.setOrientation(VERTICAL);
+            voteLayout.addView(upvoteBtn);
+            voteLayout.addView(repView);
+            voteLayout.addView(downvoteBtn);
+
+            Space spaceView = new Space(context);
+            spaceView.setLayoutParams(new ViewGroup.LayoutParams(100, ViewGroup.LayoutParams.MATCH_PARENT));
+
+            LinearLayout contentLayout = new LinearLayout(context);
+            contentLayout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            contentLayout.setGravity(Gravity.CENTER_VERTICAL);
+
+            TextView contentView = new TextView(context);
+            contentView.setText(content + "\n\n" + "by " + username + "\nat " + time);
+
+            contentLayout.addView(contentView);
+
+            addView(voteLayout);
+            addView(spaceView);
+            addView(contentLayout);
+        }
+
+        private class CommentUpvoteListener implements View.OnClickListener
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Log.d(TAG, "Comment Upvote id: " + commentId);
+                SpotpostClient.upvoteComment(commentId, new AsyncHttpResponseHandler()
+                {
+                    @Override
+                    public void onSuccess(int status, Header[] headers, byte[] bytes)
+                    {
+                        Log.d(TAG, "Success upvoting comment");
+                    }
+
+                    @Override
+                    public void onFailure(int status, Header[] headers, byte[] bytes, Throwable throwable)
+                    {
+                        Log.d(TAG, "Failure upvoting comment: " + status + " " + throwable);
+                    }
+                });
+            }
+        }
+        private class CommentDownvoteListener implements View.OnClickListener
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Log.d(TAG, "Comment Downvote id: " + commentId);
+                SpotpostClient.downvoteComment(commentId, new AsyncHttpResponseHandler()
+                {
+                    @Override
+                    public void onSuccess(int status, Header[] headers, byte[] bytes)
+                    {
+                        Log.d(TAG, "Success downvoting comment");
+                    }
+
+                    @Override
+                    public void onFailure(int status, Header[] headers, byte[] bytes, Throwable throwable)
+                    {
+                        Log.d(TAG, "Failure downvoting comment: " + status + " " + throwable);
+                    }
+                });
+            }
+        }
+    }
+
     private View setupProgressBar()
     {
         // create new ProgressBar and style it
