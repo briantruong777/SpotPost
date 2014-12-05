@@ -670,7 +670,7 @@ class DBManager:
 	###
 	def delete_comments_by_spotpost(self, id):
 		cursor.execute("DELETE FROM SpotPostComments WHERE message_id = ?", (id,))
-		cursor.commit()
+		connect.commit()
 
 	###
 	#
@@ -681,7 +681,7 @@ class DBManager:
 	###
 	def delete_spotpost_rates(id):
 		cursor.execute("DELETE FROM Rates WHERE spotpost_id = ?", (id,))
-		cursor.commit()
+		connect.commit()
 
 	###
 	#
@@ -692,7 +692,7 @@ class DBManager:
 	###
 	def delete_spotpost_unlocks(id):
 		cursor.execute("DELETE FROM Unlocks WHERE spotpost_id = ?", (id,))
-		cursor.commit()
+		connect.commit()
 
 	###
 	#
