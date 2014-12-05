@@ -67,7 +67,8 @@ def build_comments_JSON(curr_id):
 		comment_dict['message_id']	= row[1]
 		comment_dict['content'] 	= unidecode(row[2])
 		comment_dict['username'] 	= unidecode(row[3])
-		comment_dict['time'] 		= unidecode(row[4])
+		comment_dict['reputation'] = row[4]
+		comment_dict['time'] 		= unidecode(row[5])
 
 		comments.append(comment_dict)
 
