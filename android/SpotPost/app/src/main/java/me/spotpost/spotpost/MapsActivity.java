@@ -159,9 +159,6 @@ public class MapsActivity extends FragmentActivity
             {
                 mLat = location.getLatitude();
                 mLng = location.getLongitude();
-                LatLng latLng = new LatLng(mLat, mLng);
-                CameraUpdate camUpdate = CameraUpdateFactory.newLatLng(latLng);
-                mMap.animateCamera(camUpdate);
             }
 
             @Override
