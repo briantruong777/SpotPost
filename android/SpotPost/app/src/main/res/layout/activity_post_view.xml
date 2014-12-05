@@ -6,6 +6,8 @@
                 android:paddingRight="@dimen/activity_horizontal_margin"
                 android:paddingTop="@dimen/activity_vertical_margin"
                 android:paddingBottom="@dimen/activity_vertical_margin"
+                android:descendantFocusability="beforeDescendants"
+                android:focusableInTouchMode="true"
                 tools:context="me.spotpost.spotpost.PostViewActivity">
 
     <ScrollView
@@ -141,6 +143,24 @@
             <Space
                 android:layout_width="match_parent"
                 android:layout_height="20dp"/>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <EditText
+                    android:id="@+id/new_comment_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentLeft="true"
+                    android:layout_toLeftOf="@+id/new_comment_btn"
+                    android:hint="@string/new_comment_str"/>
+                <Button
+                    android:id="@+id/new_comment_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentRight="true"
+                    android:text="@string/post_comment"/>
+            </RelativeLayout>
 
             <RelativeLayout
                 android:layout_width="match_parent"

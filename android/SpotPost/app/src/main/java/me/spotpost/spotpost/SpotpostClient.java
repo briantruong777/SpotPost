@@ -161,6 +161,33 @@ public class SpotpostClient
         get("spotpost/_downvote/"+postId, null, handler);
     }
 
+    public static void postComment(int postId, String content, AsyncHttpResponseHandler handler)
+    {
+        JSONObject json = new JSONObject();
+        try
+        {
+            json.put("message_id", postId);
+            json.put("content", content);
+        }
+        catch (JSONException e)
+        {
+            Log.d(TAG, "Unable to construct JSON: " + e);
+            return;
+        }
+
+        StringEntity entity = null;
+        try
+        {
+            entity = new StringEntity(json.toString());
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            Log.d(TAG, "Unable to create StringEntity: " + e);
+        }
+
+        post("comment/_post", entity, JSON_APP, handler);
+    }
+
     public static void upvoteComment(int commentId, AsyncHttpResponseHandler handler)
     {
         get("comment/_upvote/"+commentId, null, handler);

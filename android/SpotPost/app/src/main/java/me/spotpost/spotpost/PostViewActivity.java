@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -51,6 +52,9 @@ public class PostViewActivity extends Activity
     private Button mUnlockButton;
 
     private LinearLayout mCommentLayout;
+
+    private EditText mNewCommentView;
+    private Button mNewCommentBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -143,6 +147,54 @@ public class PostViewActivity extends Activity
         });
 
         mCommentLayout = (LinearLayout) findViewById(R.id.comment_layout);
+
+        mNewCommentView = (EditText) findViewById(R.id.new_comment_view);
+        mNewCommentView.setEnabled(false);
+        mNewCommentBtn = (Button) findViewById(R.id.new_comment_btn);
+        mNewCommentBtn.setEnabled(false);
+        mNewCommentBtn.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                String content = mNewCommentView.getText().toString();
+                if (content.length() > 0)
+                {
+                    SpotpostClient.postComment(mPostId, content, new JsonHttpResponseHandler()
+                    {
+                        @Override
+                        public void onSuccess(int statusCode, Header[] headers, JSONObject response)
+                        {
+                            try
+                            {
+                                Log.d(TAG, "Received JSON:\n" + response.toString(2));
+                                if (response.getInt("code") == 1000)
+                                {
+                                    Log.d(TAG, "Comment post was successful");
+                                    mNewCommentView.setText("");
+                                    SpotpostClient.getSpotPost(mPostId, 2, new GetSpotPostHandler());
+                                }
+                                else
+                                {
+                                    Log.d(TAG, "Unable to post comment");
+                                }
+                            }
+                            catch (JSONException e)
+                            {
+                                Log.d(TAG, "JSON Exception: " + e);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
+                        {
+                            Log.d(TAG, "Get SpotPost HTTP Failure: " + responseString, error);
+                            Log.d(TAG, "Couldn't post comment");
+                        }
+                    });
+                }
+            }
+        });
 
         if (mUnlock)
         {
@@ -263,6 +315,9 @@ public class PostViewActivity extends Activity
         mTimeView.setText(post.getString("time"));
         mUpButton.setEnabled(true);
         mDownButton.setEnabled(true);
+
+        mNewCommentView.setEnabled(true);
+        mNewCommentBtn.setEnabled(true);
 
         mCommentLayout.removeAllViews();
         JSONArray comments = post.getJSONArray("comments");
