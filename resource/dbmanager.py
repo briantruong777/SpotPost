@@ -669,7 +669,7 @@ class DBManager:
 	#
 	###
 	def delete_comments_by_spotpost(self, id):
-		cursor.execute("DELETE FROM SpotPostsComments WHERE message_id = ?", (id,))
+		cursor.execute("DELETE FROM SpotPostComments WHERE message_id = ?", (id,))
 		cursor.commit()
 
 	###
