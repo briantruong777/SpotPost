@@ -263,7 +263,7 @@ class DBManager:
 		else:
 			reputation = None
 
-		if 'username' in form:
+		if 'username' in form.keys():
 			client_username = form['username']
 
 		if reputation:
@@ -636,7 +636,7 @@ class DBManager:
 
 		if 'longitude' in form.keys():
 			longitude = form['longitude']
-		else
+    else:
 			longitude = None
 
 		if 'reputation' in form.keys():
