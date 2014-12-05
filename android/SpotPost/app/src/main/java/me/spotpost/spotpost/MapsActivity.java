@@ -331,7 +331,6 @@ public class MapsActivity extends FragmentActivity
             {
                 mProgressView.setVisibility(View.VISIBLE);
             }
-
             @Override
             public void onFinish()
             {

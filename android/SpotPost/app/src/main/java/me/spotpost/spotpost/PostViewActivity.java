@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -94,6 +95,17 @@ public class PostViewActivity extends Activity
                     public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable)
                     {
                         Log.d(TAG, "Failed to upvote: " + throwable);
+                    }
+
+                    @Override
+                    public void onStart()
+                    {
+                        mProgressView.setVisibility(View.VISIBLE);
+                    }
+                    @Override
+                    public void onFinish()
+                    {
+                        mProgressView.setVisibility(View.INVISIBLE);
                     }
                 });
             }
@@ -190,6 +202,17 @@ public class PostViewActivity extends Activity
                         {
                             Log.d(TAG, "Get SpotPost HTTP Failure: " + responseString, error);
                             Log.d(TAG, "Couldn't post comment");
+                        }
+
+                        @Override
+                        public void onStart()
+                        {
+                            mProgressView.setVisibility(View.VISIBLE);
+                        }
+                        @Override
+                        public void onFinish()
+                        {
+                            mProgressView.setVisibility(View.INVISIBLE);
                         }
                     });
                 }
@@ -372,11 +395,18 @@ public class PostViewActivity extends Activity
             LinearLayout contentLayout = new LinearLayout(context);
             contentLayout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             contentLayout.setGravity(Gravity.CENTER_VERTICAL);
+            contentLayout.setOrientation(VERTICAL);
 
             TextView contentView = new TextView(context);
-            contentView.setText(content + "\n\n" + "by " + username + "\nat " + time);
+            contentView.setText(content);
+            contentView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+
+            TextView extraView = new TextView(context);
+            extraView.setText("by " + username + "\nat " + time);
+            extraView.setTextColor(0xffcccccc);
 
             contentLayout.addView(contentView);
+            contentLayout.addView(extraView);
 
             addView(voteLayout);
             addView(spaceView);
@@ -395,12 +425,24 @@ public class PostViewActivity extends Activity
                     public void onSuccess(int status, Header[] headers, byte[] bytes)
                     {
                         Log.d(TAG, "Success upvoting comment");
+                        SpotpostClient.getSpotPost(mPostId, 2, new GetSpotPostHandler());
                     }
 
                     @Override
                     public void onFailure(int status, Header[] headers, byte[] bytes, Throwable throwable)
                     {
                         Log.d(TAG, "Failure upvoting comment: " + status + " " + throwable);
+                    }
+
+                    @Override
+                    public void onStart()
+                    {
+                        mProgressView.setVisibility(View.VISIBLE);
+                    }
+                    @Override
+                    public void onFinish()
+                    {
+                        mProgressView.setVisibility(View.INVISIBLE);
                     }
                 });
             }
@@ -417,12 +459,24 @@ public class PostViewActivity extends Activity
                     public void onSuccess(int status, Header[] headers, byte[] bytes)
                     {
                         Log.d(TAG, "Success downvoting comment");
+                        SpotpostClient.getSpotPost(mPostId, 2, new GetSpotPostHandler());
                     }
 
                     @Override
                     public void onFailure(int status, Header[] headers, byte[] bytes, Throwable throwable)
                     {
                         Log.d(TAG, "Failure downvoting comment: " + status + " " + throwable);
+                    }
+
+                    @Override
+                    public void onStart()
+                    {
+                        mProgressView.setVisibility(View.VISIBLE);
+                    }
+                    @Override
+                    public void onFinish()
+                    {
+                        mProgressView.setVisibility(View.INVISIBLE);
                     }
                 });
             }
