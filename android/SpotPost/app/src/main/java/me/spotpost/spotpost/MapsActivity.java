@@ -34,6 +34,9 @@ import org.json.JSONObject;
 
 public class MapsActivity extends FragmentActivity
 {
+    public static final String EXTRA_LATITUDE = "me.spotpost.spotpost.LATITUDE";
+    public static final String EXTRA_LONGITUDE = "me.spotpost.spotpost.LONGITUDE";
+
     private static final String TAG = "MapsActivity";
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
@@ -321,6 +324,12 @@ public class MapsActivity extends FragmentActivity
         {
             case R.id.action_get_spotposts:
                 getSpotPosts();
+                return true;
+            case R.id.action_post_spotpost:
+                Intent intent = new Intent(this, PostActivity.class);
+                intent.putExtra(EXTRA_LATITUDE, mLat);
+                intent.putExtra(EXTRA_LONGITUDE, mLng);
+                startActivity(intent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

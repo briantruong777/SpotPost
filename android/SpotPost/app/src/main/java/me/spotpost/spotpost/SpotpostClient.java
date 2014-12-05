@@ -87,6 +87,7 @@ public class SpotpostClient
         RequestParams params = new RequestParams();
         params.put("latitude", lat);
         params.put("longitude", lng);
+        params.put("radius", 10000.0);
         Log.d(TAG, "params: " + params.toString());
         get("spotpost/_getlocation", params, handler);
     }
@@ -114,13 +115,18 @@ public class SpotpostClient
         try
         {
             entity = new StringEntity(json.toString());
+            Log.d(TAG, "Posting:\n" + json.toString(2));
         }
         catch (UnsupportedEncodingException e)
         {
             Log.d(TAG, "Unable to create StringEntity: " + e);
         }
+        catch (JSONException e)
+        {
+            Log.d(TAG, "JSON Exception: " + e);
+        }
 
-        post("login", entity, JSON_APP, handler);
+        post("spotpost/_post", entity, JSON_APP, handler);
     }
 
     /**
