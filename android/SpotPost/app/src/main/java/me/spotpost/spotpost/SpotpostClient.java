@@ -82,7 +82,7 @@ public class SpotpostClient
     /**
      * Get nearby spotposts
      */
-    public static void getSpotPosts(double lat, double lng, AsyncHttpResponseHandler handler)
+    public static void getSpotPostsHere(double lat, double lng, AsyncHttpResponseHandler handler)
     {
         RequestParams params = new RequestParams();
         params.put("latitude", lat);
@@ -90,6 +90,14 @@ public class SpotpostClient
         params.put("radius", 10000.0);
         Log.d(TAG, "params: " + params.toString());
         get("spotpost/_getlocation", params, handler);
+    }
+
+    public static void getSpotPost(int id, AsyncHttpResponseHandler handler)
+    {
+        RequestParams params = new RequestParams();
+        params.put("id", id);
+        Log.d(TAG, "Getting SpotPost id: " + id);
+        get("spotpost/_get", params, handler);
     }
 
     /**

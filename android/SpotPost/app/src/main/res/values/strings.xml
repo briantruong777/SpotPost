@@ -10,5 +10,8 @@
     <string name="prompt_title">Title</string>
     <string name="prompt_content">Content</string>
     <string name="action_post_btn">Post It!</string>
+    <string name="post_view_time">Time:</string>
+    <string name="post_view_user">User:</string>
+    <string name="post_view_rep">Reputation:</string>
 
 </resources>

@@ -30,7 +30,7 @@
         </activity>
         <activity
             android:name="me.spotpost.spotpost.LoginActivity"
-            android:windowSoftInputMode="adjustResize|stateVisible" >
+            android:windowSoftInputMode="adjustResize|stateVisible"
             android:parentActivityName="me.spotpost.spotpost.MapsActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -38,7 +38,15 @@
         </activity>
         <activity
             android:name="me.spotpost.spotpost.PostActivity"
-            android:windowSoftInputMode="adjustResize|stateVisible" >
+            android:windowSoftInputMode="adjustResize|stateVisible"
+            android:parentActivityName="me.spotpost.spotpost.MapsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="me.spotpost.spotpost.MapsActivity" />
+        </activity>
+        <activity
+            android:name="me.spotpost.spotpost.PostViewActivity"
+            android:parentActivityName="me.spotpost.spotpost.MapsActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="me.spotpost.spotpost.MapsActivity" />

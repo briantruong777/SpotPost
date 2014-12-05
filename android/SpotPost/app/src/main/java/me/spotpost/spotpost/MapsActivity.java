@@ -36,6 +36,7 @@ public class MapsActivity extends FragmentActivity
 {
     public static final String EXTRA_LATITUDE = "me.spotpost.spotpost.LATITUDE";
     public static final String EXTRA_LONGITUDE = "me.spotpost.spotpost.LONGITUDE";
+    public static final String EXTRA_POST_ID = "me.spotpost.spotpost.POST_ID";
 
     private static final String TAG = "MapsActivity";
 
@@ -249,7 +250,7 @@ public class MapsActivity extends FragmentActivity
     private void getSpotPosts()
     {
         Log.d(TAG, "Getting SpotPosts");
-        SpotpostClient.getSpotPosts(mLat, mLng, new JsonHttpResponseHandler()
+        SpotpostClient.getSpotPostsHere(mLat, mLng, new JsonHttpResponseHandler()
         {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray response)
@@ -258,8 +259,7 @@ public class MapsActivity extends FragmentActivity
                 {
                     Log.d(TAG, "Received SpotPost JSON:\n" + response.toString(2));
                     putSpotPostsOnMap(response);
-                }
-                catch (JSONException e)
+                } catch (JSONException e)
                 {
                     Log.d(TAG, "JSON Exception: " + e);
                     Log.d(TAG, "Couldn't get SpotPosts");
@@ -274,13 +274,13 @@ public class MapsActivity extends FragmentActivity
                 {
                     if (obj != null)
                         Log.d(TAG, "JSON Object Received:\n" + obj.toString(2));
-                }
-                catch (JSONException e)
+                } catch (JSONException e)
                 {
                     Log.d(TAG, "JSON Exception " + e);
                 }
                 Log.d(TAG, "Couldn't get SpotPosts");
             }
+
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
             {
@@ -293,8 +293,9 @@ public class MapsActivity extends FragmentActivity
             {
                 mProgressView.setVisibility(View.VISIBLE);
             }
+
             @Override
-            public void onFinish ()
+            public void onFinish()
             {
                 mProgressView.setVisibility(View.INVISIBLE);
             }
