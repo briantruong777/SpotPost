@@ -164,7 +164,7 @@ def post_comment():
 	error_dict = manager.insert_comment(decoded_data, session['username'])
 
 	return json.dumps(error_dict)
-	
+
 ###
 # 
 # Allows clientside to make a GET request to get spotposts around a center latitude longitude point.
@@ -184,7 +184,7 @@ def get_spotpost_by_location():
 	longitude 	= request.args.get('longitude')
 	radius 		= request.args.get('radius')
 	top_count 	= request.args.get('top_count')
-
+	unlock_posts = request.args.get('unlock_posts')
 	if not radius:
 		radius = 100
 	if not top_count:
@@ -197,6 +197,19 @@ def get_spotpost_by_location():
 	max_long, max_lat, min_long, min_lat = calc_bounding_coords(float(longitude), float(latitude), float(radius))
 
 	data = manager.location_search_spotpost(min_lat, max_lat, min_long, max_long, top_count)
+
+	username = None
+	if 'username' in session:
+		username = session['username']
+
+	if unlock_posts and username:
+		unlock_posts = int(unlock_posts)
+		if unlock_posts:
+			#data is an array of dictionaries. 
+			for row in data:
+				unlock_id = row['id']
+				manager.insert_unlock_relation(username, unlock_id)
+
 	return json.dumps(data)
 
 ###
@@ -328,8 +341,10 @@ def delete_spotpost(id):
 @app.route('/spotpost/_update', methods = ['POST'])
 def update_spotpost():
 	error_dict = {}
-	if session['privilege'] and request.form['id']:
-		manager.update_post(request.form)
+	data = request.data
+	decoded_data = json.loads(data)
+	if 'privilege' in session.keys() and 'id' in decoded_data.keys():
+		manager.update_post(decoded_data)
 		error_dict['error'] = {"code" : "1000", "message" : "Success."}
 		return json.dumps(error_dict);
 	else:

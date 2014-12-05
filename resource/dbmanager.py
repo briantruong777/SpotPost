@@ -619,12 +619,36 @@ class DBManager:
 
 		first_data  = True
 		post_id 	= form['id']
-		content 	= form['content']
-		username 	= form['username']
-		latitude 	= form['latitude']
-		longitude 	= form['longitude']
-		reputation 	= form['reputation']
-		
+		if 'content' in form.keys():
+			content	= form['content']
+		else:
+			content = None
+
+		if 'username' in form.keys():
+			username = form['username']
+		else:
+			username = None
+
+		if 'latitude' in form.keys():
+			latitude = form['latitude']
+		else:
+			latitude = None
+
+		if 'longitude' in form.keys():
+			longitude = form['longitude']
+		else
+			longitude = None
+
+		if 'reputation' in form.keys():
+			reputation 	= form['reputation']
+		else:
+			reputation = None
+
+		if 'title' in form.keys():
+			title = form['title']
+		else:
+			title = None
+
 		where_query = "WHERE id = ?"
 
 		if content:
@@ -659,6 +683,14 @@ class DBManager:
 			else:
 				query = query + ", reputation = ?"
 			query_data = query_data + (reputation,)
+
+		if title:
+			if first_data:
+				query = query + "title = ?"
+				first_data = False
+			else:
+				query = query + ", title = ?"
+			query_data = query_data + (title,)
 
 		if first_data:
 			return "ERROR MUST ENTER IN ONE VALUE."
