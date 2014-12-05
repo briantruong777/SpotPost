@@ -57,7 +57,7 @@ function getUserStatusUrl() {
 }
 
 module.exports = {
-  getGetUrl: getGetUrl,
+  getSpotPostGetUrl: getSpotPostGetUrl,
   getSpotPostUpvoteUrl: getSpotPostUpvoteUrl,
   getSpotPostDownvoteUrl: getSpotPostDownvoteUrl,
   getSpotPostDeleteUrl: getSpotPostDeleteUrl,
