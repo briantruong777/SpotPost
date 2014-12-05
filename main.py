@@ -223,15 +223,18 @@ def get_spotpost():
 	lock_value			= request.args.get('lock_value')
 	unlock_posts	 	= request.args.get('unlock_posts')
 
+	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, lock_value)
+
+	if not username and 'username' in session:
+		username = session['username']
+
 	if unlock_posts and username:
 		unlock_posts = int(unlock_posts)
 		if unlock_posts:
 			#data is an array of dictionaries. 
 			for row in data:
 				unlock_id = row['id']
-				insert_unlock_relation(username, unlock_id)
-
-	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, lock_value)
+				manager.insert_unlock_relation(username, unlock_id)
 
 	return json.dumps(data)
 

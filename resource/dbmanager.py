@@ -195,7 +195,7 @@ class DBManager:
 	def insert_unlock_relation(self, username, id):
 		cursor.execute("SELECT * FROM Unlocks WHERE username = ? AND spotpost_id = ?", (username, id))
 		exists = cursor.fetchone()
-		if exists:
+		if not exists:
 			cursor.execute("INSERT INTO Unlocks(username, spotpost_id) VALUES (?,?)", (username, id))
 			connect.commit()
 		else:
