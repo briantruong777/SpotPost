@@ -311,9 +311,9 @@ class DBManager:
 		spotpost_id = form['message_id']
 		content 	= form['content']
 
-		if('reputation' in form.keys())
+		if 'reputation' in form.keys():
 			reputation = form['reputation']
-		else
+		else:
 			reputation = None
 
 		if form['username']:
