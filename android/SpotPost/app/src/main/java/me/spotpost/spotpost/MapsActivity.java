@@ -237,7 +237,6 @@ public class MapsActivity extends FragmentActivity
         setUpMapIfNeeded();
         mLocManage.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocListen);
         SpotpostClient.isLoggedIn(new LoginHandler());
-        getSpotPosts();
     }
 
     private class LoginHandler extends JsonHttpResponseHandler
@@ -259,9 +258,11 @@ public class MapsActivity extends FragmentActivity
                 {
                     Intent intent = new Intent(MapsActivity.this, LoginActivity.class);
                     MapsActivity.this.startActivity(intent);
-                } else
+                }
+                else
                 {
-                    Log.d(TAG, "User is already logged in");
+                    Log.d(TAG, "User is logged in");
+                    getSpotPosts();
                 }
             } catch (JSONException e)
             {
