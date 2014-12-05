@@ -223,8 +223,6 @@ def get_spotpost():
 	lock_value			= request.args.get('lock_value')
 	unlock_posts	 	= request.args.get('unlock_posts')
 
-	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, lock_value)
-
 	if unlock_posts and username:
 		unlock_posts = int(unlock_posts)
 		if unlock_posts:
@@ -232,6 +230,8 @@ def get_spotpost():
 			for row in data:
 				unlock_id = row['id']
 				insert_unlock_relation(username, unlock_id)
+
+	data = manager.select_spotpost(min_reputation, max_reputation, username, post_id, lock_value)
 
 	return json.dumps(data)
 
