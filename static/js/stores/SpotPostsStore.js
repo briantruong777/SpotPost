@@ -70,7 +70,7 @@ SpotPostsStore.dispatchToken = AppDispatcher.register(function(payload) {
       
     case Constants.GET_SPOTPOSTS:
       _opState.isLoading = true;
-      xhr('GET', SPOTPOST.getGetUrl())
+      xhr('GET', SPOTPOST.getSpotPostGetUrl())
         .success(function(data) {
           _opState.isLoading = false;
           _spotPosts = data;

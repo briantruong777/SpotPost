@@ -16,8 +16,8 @@ var addParameters = function(url, parameters) {
   return url;
 };
 
-function getGetUrl(parameters) {
-  var url = BASE + '_get';
+function getSpotPostGetUrl(parameters) {
+  var url = BASE + 'spotpost/_get';
   return addParameters(url, parameters);
 }
 
