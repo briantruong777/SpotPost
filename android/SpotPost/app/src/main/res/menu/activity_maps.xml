@@ -8,4 +8,8 @@
           android:icon="@drawable/ic_action_place"
           android:title="Post SpotPost"
           android:showAsAction="always"/>
+    <item android:id="@+id/action_logout"
+          android:title="Logout"
+          android:showAsAction="never"/>
+
 </menu>

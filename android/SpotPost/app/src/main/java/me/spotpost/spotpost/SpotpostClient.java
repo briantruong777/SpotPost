@@ -79,6 +79,11 @@ public class SpotpostClient
         post("login", entity, JSON_APP, handler);
     }
 
+    public static void logout(AsyncHttpResponseHandler handler)
+    {
+        get("_logout", null, handler);
+    }
+
     /**
      * Get nearby spotposts
      */

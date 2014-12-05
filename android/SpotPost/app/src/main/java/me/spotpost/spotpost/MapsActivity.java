@@ -26,6 +26,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.apache.http.Header;
@@ -216,50 +217,52 @@ public class MapsActivity extends FragmentActivity
         super.onStart();
         setUpMapIfNeeded();
         mLocManage.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocListen);
-        SpotpostClient.isLoggedIn(new JsonHttpResponseHandler()
+        SpotpostClient.isLoggedIn(new LoginHandler());
+        getSpotPosts();
+    }
+
+    private class LoginHandler extends JsonHttpResponseHandler
+    {
+        @Override
+        public void onStart()
         {
-            @Override
-            public void onStart()
-            {
-                mProgressView.setVisibility(View.VISIBLE);
-            }
+            mProgressView.setVisibility(View.VISIBLE);
+        }
 
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response)
+        @Override
+        public void onSuccess(int statusCode, Header[] headers, JSONObject response)
+        {
+            try
             {
-                try
-                {
-                    Log.d(TAG, "JSON Response:\n" + response.toString(2));
+                Log.d(TAG, "JSON Response:\n" + response.toString(2));
 
-                    if (response.getJSONObject("error").getInt("code") != 1000)
-                    {
-                        Intent intent = new Intent(MapsActivity.this, LoginActivity.class);
-                        MapsActivity.this.startActivity(intent);
-                    } else
-                    {
-                        Log.d(TAG, "User is already logged in");
-                    }
-                } catch (JSONException e)
+                if (response.getJSONObject("error").getInt("code") != 1000)
                 {
-                    Log.d(TAG, "JSON Exception: " + e);
-                    Log.d(TAG, "Couldn't determine login state");
+                    Intent intent = new Intent(MapsActivity.this, LoginActivity.class);
+                    MapsActivity.this.startActivity(intent);
+                } else
+                {
+                    Log.d(TAG, "User is already logged in");
                 }
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
+            } catch (JSONException e)
             {
-                Log.d(TAG, "Login Check HTTP Failure: " + responseString, error);
+                Log.d(TAG, "JSON Exception: " + e);
                 Log.d(TAG, "Couldn't determine login state");
             }
+        }
 
-            @Override
-            public void onFinish()
-            {
-                mProgressView.setVisibility(View.INVISIBLE);
-            }
-        });
-        getSpotPosts();
+        @Override
+        public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
+        {
+            Log.d(TAG, "Login Check HTTP Failure: " + responseString, error);
+            Log.d(TAG, "Couldn't determine login state");
+        }
+
+        @Override
+        public void onFinish()
+        {
+            mProgressView.setVisibility(View.INVISIBLE);
+        }
     }
 
     private void getSpotPosts()
@@ -373,6 +376,26 @@ public class MapsActivity extends FragmentActivity
                 intent.putExtra(EXTRA_LATITUDE, mLat);
                 intent.putExtra(EXTRA_LONGITUDE, mLng);
                 startActivity(intent);
+                return true;
+            case R.id.action_logout:
+                SpotpostClient.logout(new AsyncHttpResponseHandler()
+                {
+                    @Override
+                    public void onSuccess(int i, Header[] headers, byte[] bytes)
+                    {
+                        Log.d(TAG, "Logout was successful");
+                        Intent intent = new Intent(MapsActivity.this, LoginActivity.class);
+                        MapsActivity.this.startActivity(intent);
+                    }
+
+                    @Override
+                    public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable)
+                    {
+                        Log.d(TAG, "Logout failed. Oh well.");
+                        Intent intent = new Intent(MapsActivity.this, LoginActivity.class);
+                        MapsActivity.this.startActivity(intent);
+                    }
+                });
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
