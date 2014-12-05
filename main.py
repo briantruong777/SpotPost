@@ -161,8 +161,10 @@ def post_spotpost():
 def post_comment():
 	data = request.data
 	decoded_data = json.loads(data)
-	manager.insert_comment(decoded_data, session['username'])
+	error_dict = manager.insert_comment(decoded_data, session['username'])
 
+	return json.dumps(error_dict)
+	
 ###
 # 
 # Allows clientside to make a GET request to get spotposts around a center latitude longitude point.

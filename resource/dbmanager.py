@@ -326,6 +326,9 @@ class DBManager:
 
 		connect.commit()
 
+		error_dict = {"code" : "1000", "message" : "Success"}
+		return error_dict
+
 
 	###
 	#
