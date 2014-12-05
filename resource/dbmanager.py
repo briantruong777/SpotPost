@@ -636,7 +636,7 @@ class DBManager:
 
 		if 'longitude' in form.keys():
 			longitude = form['longitude']
-		else
+    else:
 			longitude = None
 
 		if 'reputation' in form.keys():
