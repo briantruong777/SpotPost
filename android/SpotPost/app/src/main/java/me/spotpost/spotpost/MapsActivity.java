@@ -198,9 +198,9 @@ public class MapsActivity extends FragmentActivity
     }
 
     @Override
-    protected void onResume()
+    protected void onStart()
     {
-        super.onResume();
+        super.onStart();
         setUpMapIfNeeded();
         mLocManage.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, mLocListen);
         SpotpostClient.isLoggedIn(new JsonHttpResponseHandler()
@@ -331,9 +331,9 @@ public class MapsActivity extends FragmentActivity
     }
 
     @Override
-    protected void onPause()
+    protected void onStop()
     {
-        super.onPause();
+        super.onStop();
         mLocManage.removeUpdates(mLocListen);
     }
 
