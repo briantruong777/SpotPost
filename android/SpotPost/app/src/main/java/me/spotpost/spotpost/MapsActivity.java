@@ -44,7 +44,7 @@ public class MapsActivity extends FragmentActivity
     public static final String EXTRA_UNLOCK = "me.spotpost.spotpost.UNLOCK";
 
     private static final String TAG = "MapsActivity";
-    private static final double LAT_LNG_TOL = 0.01;
+    private static final double LAT_LNG_TOL = 0.002;
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private HashMap<String, Integer> mMarkerToPostId;

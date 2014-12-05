@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -40,6 +41,7 @@ public class PostViewActivity extends Activity
 
     private ImageButton mUpButton;
     private ImageButton mDownButton;
+    private Button mUnlockButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -120,57 +122,20 @@ public class PostViewActivity extends Activity
             }
         });
 
+        mUnlockButton = (Button) findViewById(R.id.unlock_btn);
+        mUnlockButton.setEnabled(false);
+        mUnlockButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                SpotpostClient.unlockSpotPost(mPostId, new UnlockHandler());
+            }
+        });
+
         if (mUnlock)
         {
-            SpotpostClient.unlockSpotPost(mPostId, new JsonHttpResponseHandler()
-            {
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONArray response)
-                {
-                    try
-                    {
-                        Log.d(TAG, "JSON Response:\n" + response.toString(2));
-                        if (response.length() == 1)
-                        {
-                            JSONObject post = response.getJSONObject(0);
-                            mTitleView.setText(post.getString("title"));
-                            mContentView.setText(post.getString("content"));
-                            mUserView.setText(post.getJSONObject("user").getString("username"));
-                            mRepView.setText(post.getString("reputation"));
-                            mTimeView.setText(post.getString("time"));
-                            mUpButton.setEnabled(true);
-                            mDownButton.setEnabled(true);
-                        }
-                        else
-                        {
-                            Log.d(TAG, "Received incorrect number of SpotPosts");
-                        }
-                    }
-                    catch (JSONException e)
-                    {
-                        Log.d(TAG, "JSON Exception: " + e);
-                    }
-                }
-
-                @Override
-                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
-                {
-                    Log.d(TAG, "Unlock SpotPost HTTP Failure: " + responseString, error);
-                    Log.d(TAG, "Couldn't unlock SpotPost");
-                }
-
-                @Override
-                public void onStart()
-                {
-                    mProgressView.setVisibility(View.VISIBLE);
-                }
-
-                @Override
-                public void onFinish()
-                {
-                    mProgressView.setVisibility(View.INVISIBLE);
-                }
-            });
+            SpotpostClient.unlockSpotPost(mPostId, new UnlockHandler());
         }
         else
         {
@@ -204,6 +169,8 @@ public class PostViewActivity extends Activity
                     mUserView.setText("LOCKED");
                     mRepView.setText("LOCKED");
                     mTimeView.setText("LOCKED");
+
+                    mUnlockButton.setEnabled(true);
                 }
                 else
                 {
@@ -237,6 +204,57 @@ public class PostViewActivity extends Activity
         }
     }
 
+    private class UnlockHandler extends JsonHttpResponseHandler
+    {
+        @Override
+        public void onSuccess(int statusCode, Header[] headers, JSONArray response)
+        {
+            try
+            {
+                Log.d(TAG, "JSON Response:\n" + response.toString(2));
+                if (response.length() == 1)
+                {
+                    JSONObject post = response.getJSONObject(0);
+                    mTitleView.setText(post.getString("title"));
+                    mContentView.setText(post.getString("content"));
+                    mUserView.setText(post.getJSONObject("user").getString("username"));
+                    mRepView.setText(post.getString("reputation"));
+                    mTimeView.setText(post.getString("time"));
+                    mUpButton.setEnabled(true);
+                    mDownButton.setEnabled(true);
+
+                    mUnlockButton.setEnabled(false);
+                }
+                else
+                {
+                    Log.d(TAG, "Received incorrect number of SpotPosts");
+                }
+            }
+            catch (JSONException e)
+            {
+                Log.d(TAG, "JSON Exception: " + e);
+            }
+        }
+
+        @Override
+        public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
+        {
+            Log.d(TAG, "Unlock SpotPost HTTP Failure: " + responseString, error);
+            Log.d(TAG, "Couldn't unlock SpotPost");
+        }
+
+        @Override
+        public void onStart()
+        {
+            mProgressView.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onFinish()
+        {
+            mProgressView.setVisibility(View.INVISIBLE);
+        }
+    }
     private View setupProgressBar()
     {
         // create new ProgressBar and style it
