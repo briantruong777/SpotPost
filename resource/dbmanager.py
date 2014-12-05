@@ -649,7 +649,7 @@ class DBManager:
 		else:
 			title = None
 
-		where_query = "WHERE id = ?"
+		where_query = " WHERE id = ?"
 
 		if content:
 			query = query + "content = ?"
@@ -696,7 +696,7 @@ class DBManager:
 			return "ERROR MUST ENTER IN ONE VALUE."
 		
 		query 		= query + where_query
-		query_data 	= query_data + (id,)
+		query_data 	= query_data + (post_id,)
 
 		cursor.execute(query, query_data)
 		connect.commit()
