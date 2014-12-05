@@ -3,6 +3,7 @@ var Constants = require('../constants/Constants');
 
 var Actions = {
 
+  // LOGIN actions
   submitSignIn: function(username, password) {
     AppDispatcher.handleViewAction({
       actionType: Constants.SUBMIT_SIGN_IN,
@@ -30,6 +31,60 @@ var Actions = {
   clearRegisterError: function() {
     AppDispatcher.handleViewAction({
       actionType: Constants.CLEAR_REGISTER_ERROR
+    });
+  },
+  
+  // SPOTPOST actions
+  updateSpotPosts: function() {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.GET_SPOTPOSTS
+    });
+  },
+  
+  upvoteSpotPost: function(spotPostId) {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.UPVOTE_SPOTPOST,
+      spotPostId: spotPostId
+    });
+  },
+  
+  downvoteSpotPost: function(spotPostId) {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.DOWNVOTE_SPOTPOST,
+      spotPostId: spotPostId
+    });
+  },
+  
+  refreshUserStatus: function() {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.REFRESH_USER_STATUS
+    });
+  },
+  
+  editSpotPost: function(spotPostId) {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.EDIT_SPOTPOST,
+      spotPostId: spotPostId
+    });
+  },
+  
+  submitEditSpotPost: function(spotPost) {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.SUBMIT_EDIT_SPOTPOST,
+      spotPost: spotPost
+    });
+  },
+  
+  cancelEditSpotPost: function() {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.CANCEL_EDIT_SPOTPOST
+    });
+  },
+  
+  deleteSpotPost: function(spotPostId) {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.DELETE_SPOTPOST,
+      spotPostId: spotPostId
     });
   }
 

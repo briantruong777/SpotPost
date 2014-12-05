@@ -6,5 +6,13 @@ module.exports = keyMirror({
   SUBMIT_REGISTER: null,
   CLEAR_REGISTER_ERROR: null,
   CLEAR_SIGN_IN_ERROR: null,
-  RESET: null
+  RESET: null,
+  UPVOTE_SPOTPOST: null,
+  DOWNVOTE_SPOTPOST: null,
+  GET_SPOTPOSTS: null,
+  REFRESH_USER_STATUS: null,
+  EDIT_SPOTPOST: null,
+  SUBMIT_SPOTPOST: null,
+  CANCEL_SPOTPOST: null,
+  DELETE_SPOTPOST: null
 });

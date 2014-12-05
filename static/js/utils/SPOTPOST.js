@@ -21,18 +21,18 @@ function getGetUrl(parameters) {
   return addParameters(url, parameters);
 }
 
-function getUpvoteUrl() {
-  var url = BASE + '_upvote';
+function getSpotPostUpvoteUrl(id) {
+  var url = BASE + 'spotpost/_upvote/' + id;
   return url;
 }
 
-function getDownvoteUrl() {
-  var url = BASE + '_downvote';
+function getSpotPostDownvoteUrl(id) {
+  var url = BASE + 'spotpost/_downvote/' + id;
   return url;
 }
 
-function getDeleteSpotPostUrl() {
-  var url = BASE + '_delete';
+function getSpotPostDeleteUrl(id) {
+  var url = BASE + '_delete/' + id;
   return url;
 }
 
@@ -51,12 +51,18 @@ function getRegisterUrl() {
   return url;
 }
 
+function getUserStatusUrl() {
+  var url = BASE + '_userstatus';
+  return url;
+}
+
 module.exports = {
   getGetUrl: getGetUrl,
-  getUpvoteUrl: getUpvoteUrl,
-  getDownvoteUrl: getDownvoteUrl,
-  getDeleteSpotPostUrl: getDeleteSpotPostUrl,
+  getSpotPostUpvoteUrl: getSpotPostUpvoteUrl,
+  getSpotPostDownvoteUrl: getSpotPostDownvoteUrl,
+  getSpotPostDeleteUrl: getSpotPostDeleteUrl,
   getCreateSpotPostUrl: getCreateSpotPostUrl,
   getLoginUrl: getLoginUrl,
-  getRegisterUrl: getRegisterUrl
+  getRegisterUrl: getRegisterUrl,
+  getUserStatusUrl: getUserStatusUrl
 };
