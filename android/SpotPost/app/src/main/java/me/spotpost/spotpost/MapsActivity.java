@@ -24,6 +24,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
@@ -31,6 +32,8 @@ import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
 
 public class MapsActivity extends FragmentActivity
 {
@@ -41,6 +44,7 @@ public class MapsActivity extends FragmentActivity
     private static final String TAG = "MapsActivity";
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    private HashMap<String, Integer> mMarkerToPostId;
     private View mProgressView;
     private LocationManager mLocManage;
     private LocationListener mLocListen;
@@ -54,6 +58,7 @@ public class MapsActivity extends FragmentActivity
         setContentView(R.layout.activity_maps);
 
         setUpMapIfNeeded();
+        mMarkerToPostId = new HashMap<String, Integer>();
         mProgressView = setupProgressBar();
         mLocManage = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         setupMapLoc();
@@ -102,6 +107,16 @@ public class MapsActivity extends FragmentActivity
     {
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
         mMap.setMyLocationEnabled(true);
+        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener()
+        {
+            @Override
+            public void onInfoWindowClick(Marker marker)
+            {
+                Intent intent = new Intent(MapsActivity.this, PostViewActivity.class);
+                intent.putExtra(EXTRA_POST_ID, mMarkerToPostId.get(marker.getId()));
+                MapsActivity.this.startActivity(intent);
+            }
+        });
     }
 
     private View setupProgressBar()
@@ -306,6 +321,7 @@ public class MapsActivity extends FragmentActivity
     {
         Log.d(TAG, "Putting posts on map");
         mMap.clear();
+        mMarkerToPostId.clear();
         try
         {
             for (int i = 0; i < spotPosts.length(); i++)
@@ -316,10 +332,11 @@ public class MapsActivity extends FragmentActivity
                 String content = post.getJSONObject("user").getString("username");
                 content += " at " + post.getString("time");
 
-                mMap.addMarker(new MarkerOptions()
-                        .position(latLng)
-                        .title(title)
-                        .snippet(content));
+                Marker marker = mMap.addMarker(new MarkerOptions()
+                                        .position(latLng)
+                                        .title(title)
+                                        .snippet(content));
+                mMarkerToPostId.put(marker.getId(), post.getInt("id"));
             }
         }
         catch (JSONException e)

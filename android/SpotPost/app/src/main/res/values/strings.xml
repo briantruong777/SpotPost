@@ -6,6 +6,7 @@
     <string name="action_get_spotposts">Get SpotPosts</string>
     <string name="title_activity_post">PostActivity</string>
     <string name="hello_world">Hello world!</string>
+    <string name="loading">loading...</string>
     <string name="action_settings">Settings</string>
     <string name="prompt_title">Title</string>
     <string name="prompt_content">Content</string>
