@@ -61,6 +61,7 @@ LoginStore.dispatchToken = AppDispatcher.register(function(payload) {
           username: action.username,
           password: action.password
         };
+        console.log(loginObject);
         var request = xhr('POST', SPOTPOST.getLoginUrl(), JSON.stringify(loginObject));
         request.success(function(data) {
           if (data.code === "1000") {

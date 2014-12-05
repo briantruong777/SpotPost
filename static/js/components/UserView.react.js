@@ -37,7 +37,9 @@ var UserView = React.createClass({
   render: function() {
     return (
       <div>
-        <h1 >Welcome to SpotPost!</h1>
+        <div className="jumbotron">
+          <h1 className="text-center">Welcome to SpotPost</h1>
+        </div>
         <button onClick={this._onClickLogout} >Logout</button>
         <SpotPosts spotPosts={this.state.spotPosts} opState={this.state.opState} />
       </div>
