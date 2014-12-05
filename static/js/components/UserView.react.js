@@ -39,8 +39,10 @@ var UserView = React.createClass({
       <div>
         <div className="jumbotron">
           <h1 className="text-center">Welcome to SpotPost</h1>
+          <div className="col-md-2 col-md-offset-5">
+            <button type="button" className="btn btn-default" onClick={this._onClickLogout} >Logout</button>
+          </div>
         </div>
-        <button onClick={this._onClickLogout} >Logout</button>
         <SpotPosts spotPosts={this.state.spotPosts} opState={this.state.opState} />
       </div>
     );
