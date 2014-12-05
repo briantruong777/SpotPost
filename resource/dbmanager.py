@@ -263,7 +263,7 @@ class DBManager:
 		else:
 			reputation = None
 
-		if 'username' in form:
+		if 'username' in form.keys():
 			client_username = form['username']
 
 		if reputation:
