@@ -97,11 +97,21 @@ public class SpotpostClient
         get("spotpost/_getlocation", params, handler);
     }
 
-    public static void getSpotPost(int id, AsyncHttpResponseHandler handler)
+    public static void getSpotPost(int id, int lockValue, AsyncHttpResponseHandler handler)
     {
         RequestParams params = new RequestParams();
         params.put("id", id);
+        params.put("lock_value", lockValue);
         Log.d(TAG, "Getting SpotPost id: " + id);
+        get("spotpost/_get", params, handler);
+    }
+
+    public static void unlockSpotPost(int id, AsyncHttpResponseHandler handler)
+    {
+        RequestParams params = new RequestParams();
+        params.put("id", id);
+        params.put("unlock_posts", 1);
+        Log.d(TAG, "Unlocking SpotPost id: " + id);
         get("spotpost/_get", params, handler);
     }
 

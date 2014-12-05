@@ -30,6 +30,8 @@ public class PostViewActivity extends Activity
 
     private int mPostId;
 
+    private boolean mUnlock;
+
     private TextView mTitleView;
     private TextView mContentView;
     private TextView mUserView;
@@ -48,6 +50,8 @@ public class PostViewActivity extends Activity
 
         Intent intent = getIntent();
         mPostId = intent.getIntExtra(MapsActivity.EXTRA_POST_ID, 0);
+        mUnlock = intent.getBooleanExtra(MapsActivity.EXTRA_UNLOCK, false);
+        Log.d(TAG, "Unlock: " + mUnlock);
 
         mTitleView = (TextView) findViewById(R.id.title);
         mContentView = (TextView) findViewById(R.id.content);
@@ -56,6 +60,7 @@ public class PostViewActivity extends Activity
         mTimeView = (TextView) findViewById(R.id.time);
 
         mUpButton = (ImageButton) findViewById(R.id.upvote);
+        mUpButton.setEnabled(false);
         mUpButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -67,7 +72,7 @@ public class PostViewActivity extends Activity
                     public void onSuccess(int i, Header[] headers, byte[] bytes)
                     {
                         Log.d(TAG, "Upvote successful");
-                        SpotpostClient.getSpotPost(mPostId, new GetSpotPostHandler());
+                        SpotpostClient.getSpotPost(mPostId, 2, new GetSpotPostHandler());
                     }
 
                     @Override
@@ -79,6 +84,7 @@ public class PostViewActivity extends Activity
             }
         });
         mDownButton = (ImageButton) findViewById(R.id.downvote);
+        mDownButton.setEnabled(false);
         mDownButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -90,7 +96,7 @@ public class PostViewActivity extends Activity
                     public void onSuccess(int i, Header[] headers, byte[] bytes)
                     {
                         Log.d(TAG, "Downvote successful");
-                        SpotpostClient.getSpotPost(mPostId, new GetSpotPostHandler());
+                        SpotpostClient.getSpotPost(mPostId, 2, new GetSpotPostHandler());
                     }
 
                     @Override
@@ -114,7 +120,62 @@ public class PostViewActivity extends Activity
             }
         });
 
-        SpotpostClient.getSpotPost(mPostId, new GetSpotPostHandler());
+        if (mUnlock)
+        {
+            SpotpostClient.unlockSpotPost(mPostId, new JsonHttpResponseHandler()
+            {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONArray response)
+                {
+                    try
+                    {
+                        Log.d(TAG, "JSON Response:\n" + response.toString(2));
+                        if (response.length() == 1)
+                        {
+                            JSONObject post = response.getJSONObject(0);
+                            mTitleView.setText(post.getString("title"));
+                            mContentView.setText(post.getString("content"));
+                            mUserView.setText(post.getJSONObject("user").getString("username"));
+                            mRepView.setText(post.getString("reputation"));
+                            mTimeView.setText(post.getString("time"));
+                            mUpButton.setEnabled(true);
+                            mDownButton.setEnabled(true);
+                        }
+                        else
+                        {
+                            Log.d(TAG, "Received incorrect number of SpotPosts");
+                        }
+                    }
+                    catch (JSONException e)
+                    {
+                        Log.d(TAG, "JSON Exception: " + e);
+                    }
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
+                {
+                    Log.d(TAG, "Unlock SpotPost HTTP Failure: " + responseString, error);
+                    Log.d(TAG, "Couldn't unlock SpotPost");
+                }
+
+                @Override
+                public void onStart()
+                {
+                    mProgressView.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                public void onFinish()
+                {
+                    mProgressView.setVisibility(View.INVISIBLE);
+                }
+            });
+        }
+        else
+        {
+            SpotpostClient.getSpotPost(mPostId, 2, new GetSpotPostHandler());
+        }
     }
 
     private class GetSpotPostHandler extends JsonHttpResponseHandler
@@ -133,6 +194,16 @@ public class PostViewActivity extends Activity
                     mUserView.setText(post.getJSONObject("user").getString("username"));
                     mRepView.setText(post.getString("reputation"));
                     mTimeView.setText(post.getString("time"));
+                    mUpButton.setEnabled(true);
+                    mDownButton.setEnabled(true);
+                }
+                else if (response.length() == 0)
+                {
+                    mTitleView.setText("LOCKED");
+                    mContentView.setText("LOCKED");
+                    mUserView.setText("LOCKED");
+                    mRepView.setText("LOCKED");
+                    mTimeView.setText("LOCKED");
                 }
                 else
                 {
@@ -142,7 +213,7 @@ public class PostViewActivity extends Activity
             catch (JSONException e)
             {
                 Log.d(TAG, "JSON Exception: " + e);
-                Log.d(TAG, "Couldn't determine login state");
+                Log.d(TAG, "Couldn't get Spotpost");
             }
         }
 

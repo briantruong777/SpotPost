@@ -41,11 +41,15 @@ public class MapsActivity extends FragmentActivity
     public static final String EXTRA_LATITUDE = "me.spotpost.spotpost.LATITUDE";
     public static final String EXTRA_LONGITUDE = "me.spotpost.spotpost.LONGITUDE";
     public static final String EXTRA_POST_ID = "me.spotpost.spotpost.POST_ID";
+    public static final String EXTRA_UNLOCK = "me.spotpost.spotpost.UNLOCK";
 
     private static final String TAG = "MapsActivity";
+    private static final double LAT_LNG_TOL = 0.01;
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private HashMap<String, Integer> mMarkerToPostId;
+    private HashMap<String, Double> mMarkerToPostLat;
+    private HashMap<String, Double> mMarkerToPostLng;
     private View mProgressView;
     private LocationManager mLocManage;
     private LocationListener mLocListen;
@@ -60,6 +64,8 @@ public class MapsActivity extends FragmentActivity
 
         setUpMapIfNeeded();
         mMarkerToPostId = new HashMap<String, Integer>();
+        mMarkerToPostLat = new HashMap<String, Double>();
+        mMarkerToPostLng = new HashMap<String, Double>();
         mProgressView = setupProgressBar();
         mLocManage = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         setupMapLoc();
@@ -114,7 +120,20 @@ public class MapsActivity extends FragmentActivity
             public void onInfoWindowClick(Marker marker)
             {
                 Intent intent = new Intent(MapsActivity.this, PostViewActivity.class);
-                intent.putExtra(EXTRA_POST_ID, mMarkerToPostId.get(marker.getId()));
+
+                int id = mMarkerToPostId.get(marker.getId());
+                intent.putExtra(EXTRA_POST_ID, id);
+
+                boolean unlock = false;
+                double pLat = mMarkerToPostLat.get(marker.getId());
+                double pLng = mMarkerToPostLng.get(marker.getId());
+                if (Math.abs(mLat - pLat) < LAT_LNG_TOL &&
+                    Math.abs(mLng - pLng) < LAT_LNG_TOL)
+                    unlock = true;
+                else
+                    unlock = false;
+                intent.putExtra(EXTRA_UNLOCK, unlock);
+
                 MapsActivity.this.startActivity(intent);
             }
         });
@@ -325,6 +344,8 @@ public class MapsActivity extends FragmentActivity
         Log.d(TAG, "Putting posts on map");
         mMap.clear();
         mMarkerToPostId.clear();
+        mMarkerToPostLat.clear();
+        mMarkerToPostLng.clear();
         try
         {
             for (int i = 0; i < spotPosts.length(); i++)
@@ -340,6 +361,8 @@ public class MapsActivity extends FragmentActivity
                                         .title(title)
                                         .snippet(content));
                 mMarkerToPostId.put(marker.getId(), post.getInt("id"));
+                mMarkerToPostLat.put(marker.getId(), post.getDouble("latitude"));
+                mMarkerToPostLng.put(marker.getId(), post.getDouble("longitude"));
             }
         }
         catch (JSONException e)
