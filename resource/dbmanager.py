@@ -679,7 +679,7 @@ class DBManager:
 	# id = id of spotpost whose rates will be deleted.
 	#
 	###
-	def delete_spotpost_rates(id):
+	def delete_spotpost_rates(self, id):
 		cursor.execute("DELETE FROM Rates WHERE spotpost_id = ?", (id,))
 		connect.commit()
 
@@ -690,7 +690,7 @@ class DBManager:
 	# id = id of spotpost whose unlocks will be deleted.
 	#
 	###
-	def delete_spotpost_unlocks(id):
+	def delete_spotpost_unlocks(self, id):
 		cursor.execute("DELETE FROM Unlocks WHERE spotpost_id = ?", (id,))
 		connect.commit()
 
