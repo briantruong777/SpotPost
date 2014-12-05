@@ -159,7 +159,9 @@ def post_spotpost():
 ###
 @app.route('/comment/_post', methods = ['POST'])
 def post_comment():
-	manager.insert_comment(request.form, session['username'])
+	data = request.data
+	decoded_data = json.loads(data)
+	manager.insert_comment(decoded_data, session['username'])
 
 ###
 # 

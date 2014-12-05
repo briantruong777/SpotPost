@@ -310,7 +310,11 @@ class DBManager:
 	def insert_comment(self, form, client_username):
 		spotpost_id = form['message_id']
 		content 	= form['content']
-		reputation 	= form['reputation']
+
+		if('reputation' in form.keys())
+			reputation = form['reputation']
+		else
+			reputation = None
 
 		if form['username']:
 			client_username = form['username']
