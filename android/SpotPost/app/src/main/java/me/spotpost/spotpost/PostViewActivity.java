@@ -6,14 +6,14 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.apache.http.Header;
@@ -28,11 +28,16 @@ public class PostViewActivity extends Activity
 
     private View mProgressView;
 
+    private int mPostId;
+
     private TextView mTitleView;
     private TextView mContentView;
     private TextView mUserView;
     private TextView mRepView;
     private TextView mTimeView;
+
+    private ImageButton mUpButton;
+    private ImageButton mDownButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -41,62 +46,124 @@ public class PostViewActivity extends Activity
         setContentView(R.layout.activity_post_view);
         mProgressView = setupProgressBar();
 
+        Intent intent = getIntent();
+        mPostId = intent.getIntExtra(MapsActivity.EXTRA_POST_ID, 0);
+
         mTitleView = (TextView) findViewById(R.id.title);
         mContentView = (TextView) findViewById(R.id.content);
         mUserView = (TextView) findViewById(R.id.user);
         mRepView = (TextView) findViewById(R.id.rep);
         mTimeView = (TextView) findViewById(R.id.time);
 
-        Intent intent = getIntent();
-        int postId = intent.getIntExtra(MapsActivity.EXTRA_POST_ID, 0);
-        SpotpostClient.getSpotPost(postId, new JsonHttpResponseHandler()
+        mUpButton = (ImageButton) findViewById(R.id.upvote);
+        mUpButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray response)
+            public void onClick(View v)
             {
-                try
+                SpotpostClient.upvote(mPostId, new AsyncHttpResponseHandler()
                 {
-                    Log.d(TAG, "JSON Response:\n" + response.toString(2));
-                    if (response.length() == 1)
+                    @Override
+                    public void onSuccess(int i, Header[] headers, byte[] bytes)
                     {
-                        JSONObject post = response.getJSONObject(0);
-                        mTitleView.setText(post.getString("title"));
-                        mContentView.setText(post.getString("content"));
-                        mUserView.setText(post.getJSONObject("user").getString("username"));
-                        mRepView.setText(post.getString("reputation"));
-                        mTimeView.setText(post.getString("time"));
+                        Log.d(TAG, "Upvote successful");
+                        SpotpostClient.getSpotPost(mPostId, new GetSpotPostHandler());
                     }
-                    else
+
+                    @Override
+                    public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable)
                     {
-                        Log.d(TAG, "Received incorrect number of SpotPosts");
+                        Log.d(TAG, "Failed to upvote: " + throwable);
                     }
-                }
-                catch (JSONException e)
-                {
-                    Log.d(TAG, "JSON Exception: " + e);
-                    Log.d(TAG, "Couldn't determine login state");
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
-            {
-                Log.d(TAG, "Get SpotPost HTTP Failure: " + responseString, error);
-                Log.d(TAG, "Couldn't get SpotPost");
-            }
-
-            @Override
-            public void onStart()
-            {
-                mProgressView.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onFinish()
-            {
-                mProgressView.setVisibility(View.INVISIBLE);
+                });
             }
         });
+        mDownButton = (ImageButton) findViewById(R.id.downvote);
+        mDownButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                SpotpostClient.downvote(mPostId, new AsyncHttpResponseHandler()
+                {
+                    @Override
+                    public void onSuccess(int i, Header[] headers, byte[] bytes)
+                    {
+                        Log.d(TAG, "Downvote successful");
+                        SpotpostClient.getSpotPost(mPostId, new GetSpotPostHandler());
+                    }
+
+                    @Override
+                    public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable)
+                    {
+                        Log.d(TAG, "Failed to downvote: " + throwable);
+                    }
+
+                    @Override
+                    public void onStart()
+                    {
+                        mProgressView.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onFinish()
+                    {
+                        mProgressView.setVisibility(View.INVISIBLE);
+                    }
+                });
+            }
+        });
+
+        SpotpostClient.getSpotPost(mPostId, new GetSpotPostHandler());
+    }
+
+    private class GetSpotPostHandler extends JsonHttpResponseHandler
+    {
+        @Override
+        public void onSuccess(int statusCode, Header[] headers, JSONArray response)
+        {
+            try
+            {
+                Log.d(TAG, "JSON Response:\n" + response.toString(2));
+                if (response.length() == 1)
+                {
+                    JSONObject post = response.getJSONObject(0);
+                    mTitleView.setText(post.getString("title"));
+                    mContentView.setText(post.getString("content"));
+                    mUserView.setText(post.getJSONObject("user").getString("username"));
+                    mRepView.setText(post.getString("reputation"));
+                    mTimeView.setText(post.getString("time"));
+                }
+                else
+                {
+                    Log.d(TAG, "Received incorrect number of SpotPosts");
+                }
+            }
+            catch (JSONException e)
+            {
+                Log.d(TAG, "JSON Exception: " + e);
+                Log.d(TAG, "Couldn't determine login state");
+            }
+        }
+
+        @Override
+        public void onFailure(int statusCode, Header[] headers, String responseString, Throwable error)
+        {
+            Log.d(TAG, "Get SpotPost HTTP Failure: " + responseString, error);
+            Log.d(TAG, "Couldn't get SpotPost");
+        }
+
+        @Override
+        public void onStart()
+        {
+            mProgressView.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onFinish()
+        {
+            mProgressView.setVisibility(View.INVISIBLE);
+        }
     }
 
     private View setupProgressBar()
