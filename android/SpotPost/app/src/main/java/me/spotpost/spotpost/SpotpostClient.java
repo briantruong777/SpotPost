@@ -92,7 +92,7 @@ public class SpotpostClient
         RequestParams params = new RequestParams();
         params.put("latitude", lat);
         params.put("longitude", lng);
-        params.put("radius", 10000.0);
+        params.put("radius", 400.0);
         Log.d(TAG, "params: " + params.toString());
         get("spotpost/_getlocation", params, handler);
     }
