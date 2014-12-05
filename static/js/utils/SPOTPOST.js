@@ -16,6 +16,10 @@ var addParameters = function(url, parameters) {
   return url;
 };
 
+function getBase() {
+  return BASE;
+}
+
 function getSpotPostGetUrl(parameters) {
   var url = BASE + 'spotpost/_get';
   return addParameters(url, parameters);
@@ -32,7 +36,7 @@ function getSpotPostDownvoteUrl(id) {
 }
 
 function getSpotPostDeleteUrl(id) {
-  var url = BASE + '_delete/' + id;
+  var url = BASE + 'spotpost/_delete/' + id;
   return url;
 }
 
@@ -56,13 +60,26 @@ function getUserStatusUrl() {
   return url;
 }
 
+function getLogoutUrl() {
+  var url = BASE + '_logout';
+  return url;
+}
+
+function getCommentPostUrl() {
+  var url = BASE + 'comment/_post';
+  return url;
+}
+
 module.exports = {
+  getBase: getBase,
   getSpotPostGetUrl: getSpotPostGetUrl,
   getSpotPostUpvoteUrl: getSpotPostUpvoteUrl,
   getSpotPostDownvoteUrl: getSpotPostDownvoteUrl,
   getSpotPostDeleteUrl: getSpotPostDeleteUrl,
   getCreateSpotPostUrl: getCreateSpotPostUrl,
   getLoginUrl: getLoginUrl,
+  getLogoutUrl: getLogoutUrl,
   getRegisterUrl: getRegisterUrl,
-  getUserStatusUrl: getUserStatusUrl
+  getUserStatusUrl: getUserStatusUrl,
+  getCommentPostUrl: getCommentPostUrl
 };

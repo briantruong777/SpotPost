@@ -3,17 +3,20 @@
  */
 
 var React = require('react');
+var Actions = require('../actions/Actions');
 
 var SpotPostOwnerControls = React.createClass({
 
+  _spotPost: undefined,
+
   _onClickEdit: function(event) {
     event.preventDefault();
-    Actions.editSpotPost(this.state.spotPost.id);
+    Actions.editSpotPost(this._spotPost.id);
   },
   
-  _onClickMinus1: function(event) {
+  _onClickDelete: function(event) {
     event.preventDefault();
-    Actions.deleteSpotPost(this.state.spotPost.id);
+    Actions.deleteSpotPost(this._spotPost.id);
   },
 
   render: function() {
@@ -23,9 +26,7 @@ var SpotPostOwnerControls = React.createClass({
     var isLoading = opState.isLoading;
     var disable = isEditing || isLoading;
     
-    this.setState({
-      spotPost: spotPost
-    });
+    this._spotPost = spotPost;
     
     return (
       <div>

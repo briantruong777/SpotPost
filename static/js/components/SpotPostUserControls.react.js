@@ -3,17 +3,20 @@
  */
 
 var React = require('react');
+var Actions = require('../actions/Actions');
 
 var SpotPostUserControls = React.createClass({
 
+  _spotPost: undefined,
+
   _onClickPlus1: function(event) {
     event.preventDefault();
-    Actions.upvoteSpotPost(this.state.spotPost.id);
+    Actions.upvoteSpotPost(this._spotPost.id);
   },
   
   _onClickMinus1: function(event) {
     event.preventDefault();
-    Actions.downvoteSpotPost(this.state.spotPost.id);
+    Actions.downvoteSpotPost(this._spotPost.id);
   },
 
   render: function() {
@@ -21,12 +24,10 @@ var SpotPostUserControls = React.createClass({
     var spotPost = this.props.spotPost
     var isEditing = opState.edit.isEditing;
     var isLoading = opState.isLoading;
-    var disablePlus1 = isEditing || isloading;
-    var disableMinus1 = isEditing || isloading;
+    var disablePlus1 = isEditing || isLoading;
+    var disableMinus1 = isEditing || isLoading;
     
-    this.setState({
-      spotPost: spotPost
-    });
+    this._spotPost = spotPost;
     
     return (
       <div>

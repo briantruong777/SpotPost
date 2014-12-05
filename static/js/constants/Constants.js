@@ -12,7 +12,12 @@ module.exports = keyMirror({
   GET_SPOTPOSTS: null,
   REFRESH_USER_STATUS: null,
   EDIT_SPOTPOST: null,
-  SUBMIT_SPOTPOST: null,
-  CANCEL_SPOTPOST: null,
-  DELETE_SPOTPOST: null
+  SUBMIT_EDIT_SPOTPOST: null,
+  CANCEL_EDIT: null,
+  DELETE_SPOTPOST: null,
+  COMMENT: null,
+  SUBMIT_COMMENT: null,
+  EDIT_COMMENT: null,
+  SUBMIT_EDIT_COMMENT: null,
+  CLEAR_EDIT_ERROR: null
 });

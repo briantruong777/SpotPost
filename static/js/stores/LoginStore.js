@@ -64,12 +64,11 @@ LoginStore.dispatchToken = AppDispatcher.register(function(payload) {
         xhr('POST', SPOTPOST.getLoginUrl(), JSON.stringify(loginObject))
           .success(function(data) {
             if (data.code === "1000") {
-              window.location.assign("http://spotpost.me");
+              window.location.assign(SPOTPOST.getBase());
             }
             else {
               _signInError = data.message;
             }
-            console.log(data);
             _isBusy = false;
             LoginStore.emitChange();
           });
@@ -110,12 +109,11 @@ LoginStore.dispatchToken = AppDispatcher.register(function(payload) {
         xhr('POST', SPOTPOST.getRegisterUrl(), JSON.stringify(regObject))
           .success(function(data) {
             if (data.code === "1000") {
-              window.location.assign("http://spotpost.me");
+              window.location.assign(SPOTPOST.getBase());
             }
             else {
               _registerError = data.message;
             }
-            console.log(data);
             _isBusy = false;
             LoginStore.emitChange();
           });

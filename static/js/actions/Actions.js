@@ -75,9 +75,9 @@ var Actions = {
     });
   },
   
-  cancelEditSpotPost: function() {
+  cancelEdit: function() {
     AppDispatcher.handleViewAction({
-      actionType: Constants.CANCEL_EDIT_SPOTPOST
+      actionType: Constants.CANCEL_EDIT
     });
   },
   
@@ -85,6 +85,42 @@ var Actions = {
     AppDispatcher.handleViewAction({
       actionType: Constants.DELETE_SPOTPOST,
       spotPostId: spotPostId
+    });
+  },
+  
+  comment: function(spotPostId) {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.COMMENT,
+      spotPostId: spotPostId
+    });
+  },
+  
+  submitComment: function(spotPostId, content) {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.SUBMIT_COMMENT,
+      spotPostId: spotPostId,
+      content: content
+    });
+  },
+  
+  editComment: function(spotPostId, commentId) {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.EDIT_COMMENT,
+      spotPostId: spotPostId,
+      commentId: commentId
+    });
+  },
+  
+  submitEditComment: function(comment) {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.SUBMIT_EDIT_COMMENT,
+      comment: comment
+    });
+  },
+  
+  clearEditError: function() {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.CLEAR_EDIT_ERROR
     });
   }
 
