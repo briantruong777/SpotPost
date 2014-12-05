@@ -21,18 +21,17 @@ var SpotPostUserControls = React.createClass({
 
   render: function() {
     var opState = this.props.opState;
-    var spotPost = this.props.spotPost
+    var spotPost = this.props.spotPost;
     var isEditing = opState.edit.isEditing;
     var isLoading = opState.isLoading;
-    var disablePlus1 = isEditing || isLoading;
-    var disableMinus1 = isEditing || isLoading;
+    var disable = isEditing || isLoading;
     
     this._spotPost = spotPost;
     
     return (
       <div>
-        <button onClick={this._onClickPlus1} disable={disablePlus1} >+1</button>
-        <button onClick={this._onClickMinus1} disable={disableMinus1} >-1</button>
+        <button onClick={this._onClickPlus1} disable={disable} >+1</button>
+        <button onClick={this._onClickMinus1} disable={disable} >-1</button>
       </div>
     );
   }

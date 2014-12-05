@@ -107,9 +107,11 @@ SpotPostsStore.dispatchToken = AppDispatcher.register(function(payload) {
       break;
     
     case Constants.SUBMIT_EDIT_SPOTPOST:
+      var spotPostUpdate = action.spotPostUpdate;
       _clearEdit();
       _opState.isLoading = true;
-      xhr('POST', getSpotPostUpdateUrl(), action.spotPost)
+      console.log(JSON.stringify(spotPostUpdate));
+      xhr('POST', SPOTPOST.getSpotPostUpdateUrl(), JSON.stringify(spotPostUpdate))
         .success(function(data) {
           Actions.updateSpotPosts();
         });
@@ -136,8 +138,8 @@ SpotPostsStore.dispatchToken = AppDispatcher.register(function(payload) {
     case Constants.SUBMIT_COMMENT:
       var spotPostId = action.spotPostId;
       var content = action.content;
-      if (content === undefined || content.length === 0) {
-        errorMessage = "No content";
+      if (content === undefined || content === null || content.length === 0) {
+        _opState.edit.errorMessage = "No content";
         break;
       }
       
@@ -163,6 +165,24 @@ SpotPostsStore.dispatchToken = AppDispatcher.register(function(payload) {
       
     case Constants.CLEAR_EDIT_ERROR:
       _opState.edit.errorMessage = undefined;
+      break;
+      
+    case Constants.UPVOTE_COMMENT:
+      var commentId = action.commentId;
+      _opState.isLoading = true;
+      xhr('GET', SPOTPOST.getCommentUpvoteUrl(commentId))
+        .success(function(data) {
+          Actions.updateSpotPosts();
+        });
+      break;
+      
+    case Constants.DOWNVOTE_COMMENT:
+      var commentId = action.commentId;
+      _opState.isLoading = true;
+      xhr('GET', SPOTPOST.getCommentDownvoteUrl(commentId))
+        .success(function(data) {
+          Actions.updateSpotPosts();
+        });
       break;
       
     default:

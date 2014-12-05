@@ -61,17 +61,21 @@ LoginStore.dispatchToken = AppDispatcher.register(function(payload) {
           username: action.username,
           password: action.password
         };
-        xhr('POST', SPOTPOST.getLoginUrl(), JSON.stringify(loginObject))
-          .success(function(data) {
-            if (data.code === "1000") {
-              window.location.assign(SPOTPOST.getBase());
-            }
-            else {
-              _signInError = data.message;
-            }
-            _isBusy = false;
-            LoginStore.emitChange();
-          });
+        var request = xhr('POST', SPOTPOST.getLoginUrl(), JSON.stringify(loginObject));
+        request.success(function(data) {
+          if (data.code === "1000") {
+            window.location.assign(SPOTPOST.getBase());
+          }
+          else {
+            _signInError = data.message;
+          }
+          _isBusy = false;
+          LoginStore.emitChange();
+        });
+        request.error(function(data) {
+          _isBusy = false;
+          LoginStore.emitChange();
+        }
       }
       break;
       
@@ -106,17 +110,21 @@ LoginStore.dispatchToken = AppDispatcher.register(function(payload) {
           password: password,
           email: email
         };
-        xhr('POST', SPOTPOST.getRegisterUrl(), JSON.stringify(regObject))
-          .success(function(data) {
-            if (data.code === "1000") {
-              window.location.assign(SPOTPOST.getBase());
-            }
-            else {
-              _registerError = data.message;
-            }
-            _isBusy = false;
-            LoginStore.emitChange();
-          });
+        var request = xhr('POST', SPOTPOST.getRegisterUrl(), JSON.stringify(regObject));
+        request.success(function(data) {
+          if (data.code === "1000") {
+            window.location.assign(SPOTPOST.getBase());
+          }
+          else {
+            _registerError = data.message;
+          }
+          _isBusy = false;
+          LoginStore.emitChange();
+        });
+        request.error(function(data) {
+          _isBusy = false;
+          LoginStore.emitChange();
+        }
       }
       break;
       

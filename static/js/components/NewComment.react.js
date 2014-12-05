@@ -4,6 +4,7 @@
 
 var React = require('react');
 var Actions = require('../actions/Actions');
+var ErrorMessage = require('./ErrorMessage.react');
 
 var ENTER_KEY = 13;
 
@@ -53,17 +54,22 @@ var NewComment = React.createClass({
   },
 
   render: function() {
-    this._spotPost = this.props.spotPost;
-    this._opState = this.props.opState;
+    var spotPost = this.props.spotPost;
+    var opState = this.props.opState;
+  
+    this._spotPost = spotPost;
+    this._opState = opState;
     
-    var isLoading = this._opState.isLoading;
-    var edit = this._opState.edit;
-    if (edit.isEditing && edit.newComment && edit.spotPostId === this._spotPost.id) {
+    var isLoading = opState.isLoading;
+    var edit = opState.edit;
+    if (edit.isEditing && edit.newComment && edit.spotPostId === spotPost.id) {
+      var error = opState.edit.errorMessage;
       return (
         <div>
           <input ref="content" type="text" onKeyDown={this._onKeyDown} placeholder="Comment" />
           <button onClick={this._onClickSubmit} disable={isLoading}>Post</button>
           <button onClick={this._onClickCancel} disable={isLoading}>Cancel</button>
+          <ErrorMessage error={error} />
         </div>
       );
     }
@@ -71,7 +77,9 @@ var NewComment = React.createClass({
     var disable = edit.isEditing || isLoading;
     
     return (
-      <button onClick={this._onClickComment} disable={disable}>Comment</button>
+      <div>
+        <button onClick={this._onClickComment} disable={disable}>Comment</button>
+      </div>
     );
   }
 
