@@ -63,17 +63,29 @@ var SpotPost = React.createClass({
     // - ownerControls
     // - userControls
     
-    if (user.username === spotPost.user.username && edit.spotPostId === spotPost.id && edit.commentId < 0) {
+    if (user.username === spotPost.user.username && edit.spotPostId === spotPost.id && edit.commentId < 0 && !edit.newComment) {
       var title = spotPost.title;
       var content = spotPost.content;
       var error = opState.edit.errorMessage;
       return (
-        <div>
-          <input ref="newTitle" type="text" onKeyDown={this._onKeyDown} defaultValue={title} onChange={this._handleTitleChange} placeholder="SpotPost Title" disabled={isLoading} />
-          <input ref="newContent" type="text" onKeyDown={this._onKeyDown} defaultValue={content} placeholder="SpotPost Content" disabled={isLoading} />
-          <button onClick={this._onClickSubmitEdit} >Submit</button>
-          <button onClick={this._onClickCancel} >Cancel</button>
-          <ErrorMessage error={error} />
+        <div className="col-md-4 col-md-offset-4">
+          <div className="panel panel-success">
+            <div className="panel-heading">
+              <input className="form-control" ref="newTitle" type="text" onKeyDown={this._onKeyDown} defaultValue={title} onChange={this._handleTitleChange} placeholder="SpotPost Title" disabled={isLoading} />
+              <p><small>{spotPost.user.username} at {spotPost.time}</small></p>
+            </div>
+            <div className="row">
+            <div className="col-md-10 col-md-offset-1">
+              <div className="row">
+                <input className="form-control" ref="newContent" type="text" onKeyDown={this._onKeyDown} defaultValue={content} placeholder="SpotPost Content" disabled={isLoading} />
+              </div>
+              <p>Reputation: {spotPost.reputation}</p>
+              <button type="button" className="btn btn-primary" onClick={this._onClickSubmitEdit} >Submit</button>
+              <button type="button" className="btn btn-default" onClick={this._onClickCancel} >Cancel</button>
+              <ErrorMessage error={error} />
+            </div>
+            </div>
+          </div>
         </div>
       )
     }
@@ -87,13 +99,19 @@ var SpotPost = React.createClass({
     }
     
     return (
-      <div>
-        <p><b>{spotPost.title}</b></p>
-        <p>{spotPost.user.username} at {spotPost.time}</p>
-        <p>{spotPost.content}</p>
-        <p>Reputation: {spotPost.reputation}</p>
-        <Controls spotPost={spotPost} opState={opState} />
-        <Comments spotPost={spotPost} opState={opState} />
+      <div className="col-md-4 col-md-offset-4">
+        <div className="panel panel-primary">
+          <div className="panel-heading">
+            <h3>{spotPost.title}</h3>
+            <p><small>{spotPost.user.username} at {spotPost.time}</small></p>
+          </div>
+          <div className="col-md-10 col-md-offset-1">
+            <h3>{spotPost.content}</h3>
+            <p>Reputation: {spotPost.reputation}</p>
+            <Controls spotPost={spotPost} opState={opState} />
+          </div>
+          <Comments spotPost={spotPost} opState={opState} />
+        </div>
       </div>
     );
   }

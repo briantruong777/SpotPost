@@ -75,7 +75,7 @@ LoginStore.dispatchToken = AppDispatcher.register(function(payload) {
         request.error(function(data) {
           _isBusy = false;
           LoginStore.emitChange();
-        }
+        });
       }
       break;
       
@@ -124,7 +124,7 @@ LoginStore.dispatchToken = AppDispatcher.register(function(payload) {
         request.error(function(data) {
           _isBusy = false;
           LoginStore.emitChange();
-        }
+        });
       }
       break;
       

@@ -82,6 +82,7 @@ SpotPostsStore.dispatchToken = AppDispatcher.register(function(payload) {
       
     case Constants.GET_SPOTPOSTS:
       _opState.isLoading = true;
+      console.log(SPOTPOST.getSpotPostGetUrl());
       xhr('GET', SPOTPOST.getSpotPostGetUrl())
         .success(function(data) {
           _opState.isLoading = false;
@@ -108,6 +109,17 @@ SpotPostsStore.dispatchToken = AppDispatcher.register(function(payload) {
     
     case Constants.SUBMIT_EDIT_SPOTPOST:
       var spotPostUpdate = action.spotPostUpdate;
+      var title = spotPostUpdate.title;
+      var content = spotPostUpdate.content;
+      if (title === undefined || title === null || title.length === 0) {
+        _opState.edit.errorMessage = "No title";
+        break;
+      }
+      else if (content === undefined || content === null || content.length === 0) {
+        _opState.edit.errorMessage = "No content";
+        break;
+      }
+      
       _clearEdit();
       _opState.isLoading = true;
       console.log(JSON.stringify(spotPostUpdate));

@@ -30,12 +30,24 @@ var Comment = React.createClass({
     this._comment = comment;
     
     return (
-      <div>
-        <p>{comment.username} at {comment.time}</p>
-        <p>{comment.content}</p>
-        <p>Reputation: {comment.reputation}</p>
-        <button onClick={this._onClickPlus1} disable={disable} >+1</button>
-        <button onClick={this._onClickMinus1} disable={disable} >-1</button>
+      <div className="row">
+        <div className="panel panel-default">
+          <div className="panel-heading">
+            <h6>{comment.username} at {comment.time}</h6>
+          </div>
+          <div className="row">
+            <div className="col-md-10 col-md-offset-1">
+              <h5>{comment.content}</h5>
+              <p>Reputation: {comment.reputation}</p>
+              <button type="button" className="btn btn-success" onClick={this._onClickPlus1} disable={disable} >
+                <span className="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
+              </button>
+              <button type="button" className="btn btn-danger" onClick={this._onClickMinus1} disable={disable} >
+                <span className="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

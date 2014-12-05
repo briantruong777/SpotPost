@@ -30,8 +30,12 @@ var SpotPostUserControls = React.createClass({
     
     return (
       <div>
-        <button onClick={this._onClickPlus1} disable={disable} >+1</button>
-        <button onClick={this._onClickMinus1} disable={disable} >-1</button>
+        <button type="button" className="btn btn-success" onClick={this._onClickPlus1} disable={disable} >
+          <span className="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
+        </button>
+        <button type="button" className="btn btn-danger" onClick={this._onClickMinus1} disable={disable} >
+          <span className="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span>
+        </button>
       </div>
     );
   }

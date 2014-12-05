@@ -65,11 +65,13 @@ var NewComment = React.createClass({
     if (edit.isEditing && edit.newComment && edit.spotPostId === spotPost.id) {
       var error = opState.edit.errorMessage;
       return (
-        <div>
-          <input ref="content" type="text" onKeyDown={this._onKeyDown} placeholder="Comment" />
-          <button onClick={this._onClickSubmit} disable={isLoading}>Post</button>
-          <button onClick={this._onClickCancel} disable={isLoading}>Cancel</button>
-          <ErrorMessage error={error} />
+        <div className="row">
+          <div className="col-md-10 col-md-offset-1">
+            <input className="col-md-2 form-control" ref="content" type="text" onKeyDown={this._onKeyDown} placeholder="Comment" />
+            <button type="button" className="btn btn-primary" onClick={this._onClickSubmit} disable={isLoading}>Post</button>
+            <button type="button" className="btn btn-default" onClick={this._onClickCancel} disable={isLoading}>Cancel</button>
+            <ErrorMessage error={error} />
+          </div>
         </div>
       );
     }
@@ -77,8 +79,10 @@ var NewComment = React.createClass({
     var disable = edit.isEditing || isLoading;
     
     return (
-      <div>
-        <button onClick={this._onClickComment} disable={disable}>Comment</button>
+      <div className="row">
+        <div className="col-md-10 col-md-offset-1">
+          <button type="button" className="btn btn-default" onClick={this._onClickComment} disable={disable}>Comment</button>
+        </div>
       </div>
     );
   }

@@ -1,5 +1,5 @@
-var BASE = 'http://spotpost.me/';
-//var BASE = 'http://localhost:5000/';
+//var BASE = 'http://spotpost.me/';
+var BASE = 'http://localhost:5000/';
 
 var addParameters = function(url, parameters) {
   var first = true;

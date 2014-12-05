@@ -28,7 +28,7 @@ var Comments = React.createClass({
     
     return (
       <div>
-        <ul>
+        <ul className="list-unstyled col-md-10 col-md-offset-1">
           {comments.map(this._renderComment)}
         </ul>
         <NewComment spotPost={this._spotPost} opState={this._opState} />

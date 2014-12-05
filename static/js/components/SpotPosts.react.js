@@ -22,7 +22,7 @@ var SpotPosts = React.createClass({
     }
   
     return (
-      <ul>
+      <ul className="list-unstyled">
         {spotPosts.map(this._renderSpotPost)}
       </ul>
     );
