@@ -4,6 +4,7 @@
 
 var React = require('react');
 var Actions = require('../actions/Actions');
+var SpotPostUserControls = require('./SpotPostUserControls.react');
 
 var SpotPostOwnerControls = React.createClass({
 
@@ -19,6 +20,16 @@ var SpotPostOwnerControls = React.createClass({
     Actions.deleteSpotPost(this._spotPost.id);
   },
 
+  _onClickPlus1: function(event) {
+    event.preventDefault();
+    Actions.upvoteSpotPost(this._spotPost.id);
+  },
+  
+  _onClickMinus1: function(event) {
+    event.preventDefault();
+    Actions.downvoteSpotPost(this._spotPost.id);
+  },
+
   render: function() {
     var opState = this.props.opState;
     var spotPost = this.props.spotPost;
@@ -30,6 +41,8 @@ var SpotPostOwnerControls = React.createClass({
     
     return (
       <div>
+        <button onClick={this._onClickPlus1} disable={disable} >+1</button>
+        <button onClick={this._onClickMinus1} disable={disable} >-1</button>
         <button onClick={this._onClickEdit} disable={disable} >Edit</button>
         <button onClick={this._onClickDelete} disable={disable} >Delete</button>
       </div>

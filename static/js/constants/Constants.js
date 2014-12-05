@@ -19,5 +19,7 @@ module.exports = keyMirror({
   SUBMIT_COMMENT: null,
   EDIT_COMMENT: null,
   SUBMIT_EDIT_COMMENT: null,
-  CLEAR_EDIT_ERROR: null
+  CLEAR_EDIT_ERROR: null,
+  UPVOTE_COMMENT: null,
+  DOWNVOTE_COMMENT: null
 });

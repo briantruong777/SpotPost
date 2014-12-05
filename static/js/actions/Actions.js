@@ -68,10 +68,10 @@ var Actions = {
     });
   },
   
-  submitEditSpotPost: function(spotPost) {
+  submitEditSpotPost: function(spotPostUpdate) {
     AppDispatcher.handleViewAction({
       actionType: Constants.SUBMIT_EDIT_SPOTPOST,
-      spotPost: spotPost
+      spotPostUpdate: spotPostUpdate
     });
   },
   
@@ -121,6 +121,20 @@ var Actions = {
   clearEditError: function() {
     AppDispatcher.handleViewAction({
       actionType: Constants.CLEAR_EDIT_ERROR
+    });
+  },
+  
+  upvoteComment: function(commentId) {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.UPVOTE_COMMENT,
+      commentId: commentId
+    });
+  },
+  
+  downvoteComment: function(commentId) {
+    AppDispatcher.handleViewAction({
+      actionType: Constants.DOWNVOTE_COMMENT,
+      commentId: commentId
     });
   }
 

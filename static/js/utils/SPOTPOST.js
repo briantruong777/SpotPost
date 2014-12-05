@@ -35,6 +35,11 @@ function getSpotPostDownvoteUrl(id) {
   return url;
 }
 
+function getSpotPostUpdateUrl() {
+  var url = BASE + 'spotpost/_update';
+  return url;
+}
+
 function getSpotPostDeleteUrl(id) {
   var url = BASE + 'spotpost/_delete/' + id;
   return url;
@@ -70,16 +75,29 @@ function getCommentPostUrl() {
   return url;
 }
 
+function getCommentUpvoteUrl(commentId) {
+  var url = BASE + 'comment/_upvote/' + commentId;
+  return url;
+}
+
+function getCommentDownvoteUrl(commentId) {
+  var url = BASE + 'comment/_downvote/' + commentId;
+  return url;
+}
+
 module.exports = {
   getBase: getBase,
   getSpotPostGetUrl: getSpotPostGetUrl,
   getSpotPostUpvoteUrl: getSpotPostUpvoteUrl,
   getSpotPostDownvoteUrl: getSpotPostDownvoteUrl,
+  getSpotPostUpdateUrl: getSpotPostUpdateUrl,
   getSpotPostDeleteUrl: getSpotPostDeleteUrl,
   getCreateSpotPostUrl: getCreateSpotPostUrl,
   getLoginUrl: getLoginUrl,
   getLogoutUrl: getLogoutUrl,
   getRegisterUrl: getRegisterUrl,
   getUserStatusUrl: getUserStatusUrl,
-  getCommentPostUrl: getCommentPostUrl
+  getCommentPostUrl: getCommentPostUrl,
+  getCommentUpvoteUrl: getCommentUpvoteUrl,
+  getCommentDownvoteUrl: getCommentDownvoteUrl
 };
