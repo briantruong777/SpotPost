@@ -251,6 +251,7 @@ public class MapsActivity extends FragmentActivity
 
     private void getSpotPosts()
     {
+        Log.d(TAG, "Getting SpotPosts");
         SpotpostClient.getSpotPosts(mLat, mLng, new JsonHttpResponseHandler()
         {
             @Override
@@ -259,6 +260,7 @@ public class MapsActivity extends FragmentActivity
                 try
                 {
                     Log.d(TAG, "Received SpotPost JSON:\n" + response.toString(2));
+                    putSpotPostsOnMap(response);
                 }
                 catch (JSONException e)
                 {
@@ -300,6 +302,32 @@ public class MapsActivity extends FragmentActivity
                 mProgressView.setVisibility(View.INVISIBLE);
             }
         });
+    }
+
+    private void putSpotPostsOnMap(JSONArray spotPosts)
+    {
+        Log.d(TAG, "Putting posts on map");
+        mMap.clear();
+        try
+        {
+            for (int i = 0; i < spotPosts.length(); i++)
+            {
+                JSONObject post = spotPosts.getJSONObject(i);
+                LatLng latLng = new LatLng(post.getDouble("latitude"), post.getDouble("longitude"));
+                String title = post.getString("title");
+                String content = post.getJSONObject("user").getString("username");
+                content += " at " + post.getString("time");
+
+                mMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .title(title)
+                        .snippet(content));
+            }
+        }
+        catch (JSONException e)
+        {
+            Log.d(TAG, "JSON Exception: " + e);
+        }
     }
 
     @Override
